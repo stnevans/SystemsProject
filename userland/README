@@ -1,0 +1,31 @@
+This directory contains the source code for all user-level processes,
+split out by main function.
+
+Naming convention:
+
+    idle()      classic 'idle' process; ensures there is always a
+                runnable process to dispatch (vs., for instance, having
+                dispatch() pause when there is nothing to dispatch).
+
+    init()      classic 'init' process; starts the other user-level
+                processes based on the SPAWN_* macros in users.h
+
+    mainN()     generic main function, used by several user processes
+                with different command-line args
+
+    userX()     "one-task" main function; may be started by multiple
+                user processes
+
+All of these accept at least one command-line argument.  All are invoked
+with command lines of this form:
+
+    name  x  n
+
+Each of these is designed to be #included into the users.c file in the
+parent directory.  However, they can be compiled and linked separately
+if that is desired (e.g., if VM is being implemented for user address
+space separation).
+
+To compile and link these into separate executables, each must be linked
+with the two user library objects (ulibc.o and ulibs.o) from the
+distribution.

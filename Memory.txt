@@ -1,0 +1,70 @@
+Systems Programming framework memory layout
+
+Version:  @(#)Memory.txt	2.1
+Date:     12/8/19
+---------------------------------------------------------------------------
+
+This diagram shows important areas in the first 1MB of memory as seen
+by the standalone framework code.
+
+Each row in the diagram represents 0x100 (256) bytes of memory, except in
+"elided" areas (< ... >).  The starting address is indicated for each
+region in hex; if a CPP #define exists for that region in either
+bootstrap.S or bootstrap.h, its name is also given.
+
+	-----------------------
+	| Interrupt Vector    | 0x00000
+	|   256 x 4 bytes     |
+	|   (1024, 0x400)     |
+	|                     |
+	-----------------------
+	|                     | 0x00400
+	-----------------------
+	| GDT                 | 0x00500  GDT_ADDRESS
+	|   1024 x 8 bytes    |
+	|   (8192, 0x2000)    |
+	|                     |
+	<     . . .           >
+	|                     |
+	-----------------------
+	| IDT                 | 0x02500  IDT_ADDRESS
+	|   256 x 8 bytes     |
+	|   (2048, 0x800)     |
+	|                     |
+	|                     |
+	|                     |
+	|                     |
+	|                     |
+	-----------------------
+	| Mmap data           | 0x02D00  MMAP_ADDRESS
+	|                     |
+	|                     |
+	|                     |
+	|                     |
+	<     . . .           >
+	|                     |
+	-----------------------
+	| Bootstrap sector 1  | 0x07c00  BOOT_ADDRESS
+	|                     |
+	-----------------------
+	| Bootstrap sector 2  | 0x07e00  START_OFFSET
+	|                     |
+	-----------------------
+	|                     | 0x08000
+	|                     |
+	<     . . .           >
+	|                  ^  |
+	|  Bootstrap stack |  |
+	-----------------------
+	|                     | 0x0bc00
+	|                     |
+	|                     |
+	<     . . .           >
+	| OS stack            |
+	-----------------------
+	| Operating System    | 0x10000  TARGET_ADDRESS, TARGET_STACK
+	|   (size varies)     |
+	|                     |
+	<     . . .           >
+	|                     |
+	----------------------- 0xfffff

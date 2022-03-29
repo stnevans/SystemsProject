@@ -1,0 +1,178 @@
+Systems Programming baseline system information
+
+Version:  @(#)README	2.1
+Date:     12/8/19
+---------------------------------------------------------------------------
+
+Notes on the framework:
+
+	The following framework files have been modified:
+
+	   isr_stubs.S		Switch to system stack, additional info
+				in context trace output
+
+	   lib*.*		Additional support functions
+
+	   startup.S		Invoke _sys_init()
+
+	   Makefile		Term-specific changes
+
+	All other framework files are unchanged.
+
+Notes on the Makefile:
+
+	DO NOT USE gmakemake!  You must edit the given Makefile to tell
+	it about the file(s) you create.  Add your own file names (both 
+	source and object versions) to the "application" macros at the
+	top of the Makefile (OS_*, USR_*).
+
+	After adding or removing files from the Makefile (or changing
+	your #includes), do a "make depend" to adjust the Makefile's
+	dependency entries.
+
+To create your program:
+
+	* run 'make' in your project directory
+
+To copy it onto a USB flash drive:
+
+	All machines in the DSL have at least two front-panel USB slots
+	(typically, two USB-2 and one blue USB-3).  Under Ubuntu, you
+	can use any of these slots; insert a flash drive, and the OS
+	automatically creates device entries for the drive, using the
+	next available disk name in /dev (e.g., /dev/sdg).
+
+	To copy your bootable image to the flash drive, plug the drive
+	into a USB socket, wait a few moments for Ubuntu to recognize
+	it and create the device entries in /dev, and type
+
+		make usb
+
+	This will remake the usb.image file (if necessary), and will then
+	copy it out to the USB drive.  In order to find the correct
+	drive, the installation uses a local command named 'dcopy'.  This
+	command runs a second command named 'dfind' to identify the USB
+	drive(s) plugged into the system, and then runs a 'dd' command
+	to copy the usb.image file to the first USB device it finds.
+	(You can run 'dfind' yourself if you want to be sure that 'dcopy'
+	will be able to find the flash drive.)
+
+	Note:  the Makefile still has a "floppy" target for creating a
+	bootable floppy disk image.  However, this hasn't been used for
+	quite a while, and the necessary support tools to do the copying
+	don't exist on the current systems.  If you want to try using the
+	floppy disk as a boot device, let me know.
+
+To boot your program once you have copied it to a bootable medium:
+
+	* DO NOT USE the machine named 'sherlock' - it's a server for
+	  the lab, and should not be shut down
+	* shut down Ubuntu by using the standard Ubuntu "shut down"
+	  menu entry
+	* insert the bootable medium
+	* make sure the terminal connected to this machine is turned on
+	* push the reset button on the front panel (at the top, on
+	  the righthand side - the larger button on the lefthand 
+	  side is the power button)
+
+	DO NOT just push the reset button - Ubuntu must be shut down
+	correctly in order to avoid damaging the filesystems.
+
+	Unfortunately, the motherboards in the current lab machines are
+	somewhat stupid; once a flash drive is unplugged, they forget
+	that we want to give boot priority to flash drives once the
+	flash drive is unplugged.  For now, you will need to interrupt
+	the boot process in one of the following two ways:
+
+		1. When the ASUS logo appears on the screen, press the
+		   F8 key to bring up the boot device screen.  Scroll
+		   down the list using the arrow keys until the flash
+		   drive is highlighted, and press ENTER to boot from it.
+
+		2. When the ASUS log appears on the screen, press either
+		   the F2 or the DEL key on the keyboard to bring up the
+		   BIOS screen.  Use the right arrow key to select the
+		   "Boot" menu, then the down arrow key to the bottom of
+		   the "Boot" menu, where you will find an "Override"
+		   section.  Select the flash drive entry and press
+		   ENTER.
+
+	If you miss your window of opportunity (about five seconds)
+	to press one of these function keys and Ubuntu boots up, don't
+	panic; just shut Ubuntu down and try again.
+
+	If you want to run your program again, leave the flash drive
+	inserted and press the reset button again.
+
+To reboot Ubuntu:
+
+	* take your bootable medium out of the machine
+	* push the reset button
+
+Compiling your program creates several files:
+
+	prog.o:	linked, object form of the system
+
+	prog.b:	binary version of the system - generated from prog.o
+		by removing all the object file headers and symbol table
+
+	prog.nl:  namelist of the prog.o file - lists all global symbols,
+		their values, and the program section they're defined in
+		(Text, Data, Bss)
+
+	*.img:	the binary system image - contains the bootstrap, the
+		protected mode startup code, and your stuff, in this layout:
+
+			bootstrap	first sector
+			switch code	second sector
+			your program	sectors 3 through n+2
+			next file	n+3 through p+n+2
+			next file	p+n+3 through q+p+n+2
+			etc. (see below)
+
+		This file will be named floppy.img or usb.img, depending
+		on which device you'll be using.
+
+	BuildImage:  is used to patch the system length into the boot
+		sector of the disk.image file
+
+	Offsets:  prints byte offsets for major structures (only present
+		in distributions of the baseline OS written by the class
+		in Systems Programming); if given a "-h" option, also
+		creates the offsets.h header file.
+
+Other things you can 'make':
+
+	prog.dis:  a disassembly of the prog.o file - a text version of
+		the binary machine code
+
+	prog.nll:  like prog.nl, but includes non-global symbols as well
+		as globals (e.g., static local variables in files)
+
+	file.X:  generates an assembly listing from the C source file
+		named "file.c" which has the C source code inserted around
+		the assembly code
+
+	clean:	deletes all object, listing, and binary files
+
+	depend:	recreates the dependency lists in the Makefile
+
+Loading additional files:
+
+	You can load additional files into memory by adding the name of
+	the file and the address where you want it loaded to the end of
+	the BuildImage command in the Makefile.  However, because the
+	loading is done in real mode, you cannot load into addresses
+	above 0x9ffff.  See the code in BuildImage.c for more details.
+
+Modifying the bootstrap:
+
+	You can add some code to the bootstrap without significantly
+	changing its size.  The baseline bootstrap assembles to 0x2ad
+	bytes without the memory map code, or 0x353 with that code; this
+	leaves about 330 (or 170) bytes available at the end of the second
+	sector.  If you need to add more than will fit there, you will
+	need to change the definition of BOOT_SIZE at the beginning of
+	the file, the code which loads the second half of the bootstrap
+	from the device, and the ".org" at the end of the file to reflect
+	the new length of the bootstrap.

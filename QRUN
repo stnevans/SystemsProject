@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Run the old qemu-system-i386 from 18.04
+#
+
+#
+# use curses and tinfo libraries from 18.04 (main-net only)
+#
+# export LD_LIBRARY_PATH=/home/fac/wrc/lib/u1804
+
+#
+# other options:
+#	-nographic
+#	-display gtk
+#
+
+exec /usr/local/dcs/bin/qemu-system-i386 \
+	-serial mon:stdio \
+	-drive file=usb.img,index=0,media=disk,format=raw
