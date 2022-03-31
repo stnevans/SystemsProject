@@ -1,0 +1,9 @@
+*.o
+*.b
+*.lst
+*.img
+*.dis
+*.nl
+BuildImage
+Offsets
+offsets.h

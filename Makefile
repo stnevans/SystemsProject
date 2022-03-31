@@ -169,7 +169,8 @@ LDFLAGS = -melf_i386 -no-pie
 
 .s.b:
 	$(AS) $(ASFLAGS) -o $*.o $*.s -a=$*.lst
-	$(LD) $(LDFLAGS) -Ttext 0x0 -s --oformat binary -e begtext -o $*.b $*.o
+	$(LD) $(LDFLAGS) -Ttext 0x0 -s -e begtext -o $*.b $*.o
+	objcopy --remove-section=.note.gnu.property -O binary $*.b
 
 .c.o:
 	$(CC) $(CFLAGS) -c $*.c
@@ -193,7 +194,7 @@ prog.o:	$(OBJECTS)
 	$(LD) $(LDFLAGS) -o prog.o -Ttext 0x10000 $(OBJECTS) $(A_LIBS)
 
 prog.b:	prog.o
-	$(LD) $(LDFLAGS) -o prog.b -s --oformat binary -Ttext 0x10000 prog.o
+	objcopy --remove-section=.note.gnu.property -O binary prog.o prog.b
 
 #
 # Targets for copying bootable image onto boot devices
@@ -216,7 +217,7 @@ BuildImage:	BuildImage.c
 	$(CC) -o BuildImage BuildImage.c
 
 Offsets:	Offsets.c process.h stacks.h queues.h common.h
-	$(CC) -mx32 -std=c99 $(INCLUDES) -o Offsets Offsets.c
+	$(CC) -m32 -std=c99 $(INCLUDES) -o Offsets Offsets.c
 
 offsets.h:	Offsets
 	./Offsets -h
