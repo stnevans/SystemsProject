@@ -249,8 +249,8 @@ getOut:				/* we're done, so return */
 ** so it can be called from there as well as from the 2nd block.
 **
 **	movw	$'x',%di	/* a single character to print */
-**	movw	value,%ax	/* a 16-bit value to print in hex */
-**	call	pnum
+/**	movw	value,%ax	/* a 16-bit value to print in hex */
+/**	call	pnum
 */
 pnum:
 	pushw	%ax
@@ -430,56 +430,56 @@ check_memory:
 	pushw	%di
 
 	// Set the start of the buffer
-	movw	$MMAP_SEGMENT, %bx // 0x2D0
-	mov	%bx, %ds	// Data segment now starts at 0x2D00
-	mov	%bx, %es	// Extended segment also starts at 0x2D00
+	movw	$MMAP_SEGMENT, %bx /* 0x2D0 */
+	mov	%bx, %ds	/* Data segment now starts at 0x2D00 */
+	mov	%bx, %es	/* Extended segment also starts at 0x2D00 */
 
 	// The first 4 bytes are for the # of entries
 	movw	$0x4, %di
 	// Make a valid ACPI 3.X entry
 	movw	$1, %es:20(%di)
 
-	xorw	%bp, %bp	// Count of entries in the list
-	xorl	%ebx, %ebx	// Must contain zeroes
+	xorw	%bp, %bp	/* Count of entries in the list */
+	xorl	%ebx, %ebx	/* Must contain zeroes */
 
-	movl	$MMAP_MAGIC_NUM, %edx	// Magic number into EDX
-	movl	$MMAP_CODE, %eax	// E820 memory command
-	movl	$24, %ecx	// Ask the BIOS for 24 bytes
-	int	$0x15		// Call the BIOS
+	movl	$MMAP_MAGIC_NUM, %edx	/* Magic number into EDX */
+	movl	$MMAP_CODE, %eax	/* E820 memory command */
+	movl	$24, %ecx	/* Ask the BIOS for 24 bytes */
+	int	$0x15		/* Call the BIOS */
 
 	// check for success
-	jc	cm_failed	// C == 1 --> failure
-	movl	$MMAP_MAGIC_NUM, %edx	// sometimes EDX changes
-	cmpl	%eax, %edx	// EAX should equal EDX after the call
+	jc	cm_failed	/* C == 1 --> failure */
+	movl	$MMAP_MAGIC_NUM, %edx	/* sometimes EDX changes */
+	cmpl	%eax, %edx	/* EAX should equal EDX after the call */
 	jne	cm_failed
-	testl	%ebx, %ebx	// Should have at least one more entry
+	testl	%ebx, %ebx	/* Should have at least one more entry */
 	je	cm_failed
 
-	jmp	cm_jumpin	// Good to go - start us off
+	jmp	cm_jumpin	/* Good to go - start us off */
 
 cm_loop:
-	movl	$MMAP_CODE, %eax	// Reset our registers
+	movl	$MMAP_CODE, %eax	/* Reset our registers */
 	movw	$1, 20(%di)
 	movl	$24, %ecx
 	int	$0x15
-	jc	cm_end_of_list	// C == 1 --> end of list
+	jc	cm_end_of_list	/* C == 1 --> end of list */
 	movl	$MMAP_MAGIC_NUM, %edx
 
 cm_jumpin:
-	jcxz	cm_skip_entry	// Did we get any data?
+	jcxz	cm_skip_entry	/* Did we get any data? */
 
-	cmp	$20, %cl	// Check the byte count
-	jbe	cm_no_text	// Skip the next test if only 20 bytes
+	cmp	$20, %cl	/* Check the byte count */
+	jbe	cm_no_text	/* Skip the next test if only 20 bytes */
 
-	testb	$1, %es:20(%di) // Check the "ignore this entry" flag
+	testb	$1, %es:20(%di) /* Check the "ignore this entry" flag */
 	je	cm_skip_entry
 
 cm_no_text:
-	mov	%es:8(%di), %ecx	// lower half of length
-	or	%es:12(%di), %ecx	// now, full length
+	mov	%es:8(%di), %ecx	/* lower half of length */
+	or	%es:12(%di), %ecx	/* now, full length */
 	jz	cm_skip_entry
 
-	inc	%bp		// one more valid entry
+	inc	%bp		/* one more valid entry */
 
 	// make sure we don't overflow our space
 	cmpw	$MMAP_MAX_ENTRIES, %bp
@@ -497,11 +497,11 @@ cm_end_of_list:
 	// All done!  Store the number of elements in 0x2D00
 	movw	%bp, %ds:0x0
 
-	clc	// Clear the carry bit and return
+	clc	/* Clear the carry bit and return */
 	jmp	cm_ret
 
 cm_failed:
-	movl	$-1, %ds:0x0	// indicate failure
+	movl	$-1, %ds:0x0	/* indicate failure */
 	stc
 
 cm_ret:
