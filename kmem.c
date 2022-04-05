@@ -54,7 +54,7 @@
 #include "cio.h"
 
 #include "kmem.h"
-
+#include "paging.h"
 /*
 ** PRIVATE DEFINITIONS
 */
@@ -201,6 +201,16 @@ static void _add_block( uint32_t base, uint32_t length ) {
     // create the "block"
 
     block = (Blockinfo *) base;
+    if(is_paging_init()){
+        uint32_t virt = 0xc0000000 + base;
+        // let's identity map this block for now
+        for(int i = 0; i < length; i+=SZ_PAGE){
+            map_virt_page_to_phys(virt + i,base + i);
+        }
+        // block = base +
+        block = (Blockinfo *) virt;
+    }
+
     block->pages = B2P(length);
     block->next = NULL;
 
@@ -482,7 +492,6 @@ void *_km_page_alloc( uint32_t count ) {
         // return this chunk
         block = chunk;
     }
-
     return( block );
 }
 

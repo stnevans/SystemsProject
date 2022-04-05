@@ -21,6 +21,7 @@
 #include "sio.h"
 #include "scheduler.h"
 #include "support.h"
+#include "paging.h"
 
 // need addresses of some user functions
 #include "users.h"
@@ -155,8 +156,10 @@ void _kinit( void ) {
     // careful to follow any module precedence requirements
     //
     // classic order:  kmem; queue; everything else
+    _paging_init(); //MUST *ACTUALLY* BE FIRST
 
     _km_init();     // MUST BE FIRST
+
     // other module initialization calls here
     _queue_init();  // MUST BE SECOND
     _pcb_init();

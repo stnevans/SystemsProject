@@ -11,16 +11,16 @@
 #
 
 OS_C_SRC = clock.c kernel.c kmem.c libc.c process.c queues.c scheduler.c \
-	   sio.c stacks.c syscalls.c
+	   sio.c stacks.c syscalls.c paging.c phys_alloc.c
 OS_C_OBJ = clock.o kernel.o kmem.o libc.o process.o queues.o scheduler.o \
-	   sio.o stacks.o syscalls.o
+	   sio.o stacks.o syscalls.o paging.o phys_alloc.o
 
 OS_S_SRC = libs.S
 OS_S_OBJ = libs.o
 
 OS_HDRS  = clock.h common.h compat.h kdefs.h kernel.h kmem.h lib.h \
 	   offsets.h process.h queues.h scheduler.h sio.h stacks.h \
-	   syscalls.h
+	   syscalls.h paging.h phys_alloc.h
 
 OS_LIBS  =
 
@@ -125,7 +125,7 @@ CPPFLAGS = $(USER_OPTIONS) -nostdinc $(INCLUDES)
 # Compiler/assembler/etc. settings for 32-bit binaries
 #
 CC = gcc
-CFLAGS = -m32 -fno-pie -std=c99 -fno-stack-protector -fno-builtin -Wall -Wstrict-prototypes $(CPPFLAGS)
+CFLAGS = -m32 -fno-pie -std=c99 -fno-stack-protector -fno-builtin -Wall -Wstrict-prototypes $(CPPFLAGS) -g
 
 AS = as
 ASFLAGS = --32
@@ -301,3 +301,7 @@ ulibc.o: common.h kdefs.h cio.h kmem.h compat.h support.h kernel.h x86arch.h
 ulibc.o: process.h stacks.h queues.h lib.h
 ulibs.o: syscalls.h common.h kdefs.h cio.h kmem.h compat.h support.h kernel.h
 ulibs.o: x86arch.h process.h stacks.h queues.h lib.h
+paging.o: common.h kdefs.h cio.h kmem.h compat.h support.h kernel.h
+paging.o: x86arch.h process.h stacks.h queues.h lib.h syscalls.h paging.h phys_alloc.h
+phys_alloc.o: common.h kdefs.h cio.h kmem.h compat.h support.h kernel.h
+phys_alloc.o: x86arch.h process.h stacks.h queues.h lib.h syscalls.h paging.h phys_alloc.h

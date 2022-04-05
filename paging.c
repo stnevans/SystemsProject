@@ -1,0 +1,182 @@
+#define SP_KERNEL_SRC
+
+#include "paging.h"
+#include "lib.h"
+#include "phys_alloc.h"
+#define	SP_KERNEL_SRC
+uint8_t paging_init;
+
+
+struct page_table * alloc_pg_tbl(){
+    struct page_table * pg_tbl = (struct page_table *) alloc_frame();
+    __memset(&pg_tbl->entry, sizeof(pg_tbl), 0);
+
+    return pg_tbl;
+}
+
+void free_pg_tbl(struct page_table * tbl){
+    free_frame((phys_addr) tbl);
+}
+
+struct page_directory * alloc_pg_dir(){
+    struct page_directory * pg_dir = (struct page_directory *) alloc_frame();
+    __memset(pg_dir, sizeof(pg_dir), 0);
+    return pg_dir;
+}
+
+void free_pg_dir(struct page_directory * dir){
+    free_frame((phys_addr) dir);
+}
+
+void pte_set_attr(pte_t * pte, uint32_t attr) {
+    *pte |= attr;
+}
+
+void pte_del_attr(pte_t * pte, uint32_t attr) {
+    *pte &= ~(attr);
+}
+void pte_set_frame(pte_t * pte, phys_addr phys) {
+    *pte |= I86_PTE_FRAME & phys;
+}
+
+phys_addr pte_get_frame(pte_t * pte) {
+    return *pte & I86_PTE_FRAME;
+}
+
+void pde_set_attr(pde_t * pde, uint32_t attr) {
+    *pde |= attr;
+}
+
+void pde_del_attr(pde_t * pde, uint32_t attr) {
+    *pde &= (~attr);
+}
+
+void pde_set_frame(pde_t * pde, phys_addr phys) {
+    *pde |= I86_PDE_FRAME & phys;
+}
+
+
+// Allocate a frame, set the pte to use the frame, mark as present
+char alloc_page(pte_t * pte) {
+    phys_addr addr = alloc_frame();
+    if(!addr){
+        return false;
+    }
+    pte_set_frame(pte, addr);
+    pte_set_attr(pte, I86_PTE_PRESENT);
+
+    return true;
+}
+
+
+// Free the backing frame and mark the page not present
+void free_page(pte_t * pte) {
+    phys_addr addr = pte_get_frame(pte);
+    if(addr){
+        free_frame(addr);
+    }
+    pte_del_attr(pte, I86_PTE_PRESENT);
+}
+
+pte_t * find_pte_entry(struct page_table * pg_tbl, virt_addr addr){
+    if(!addr){
+        return 0;
+    }
+    return &pg_tbl->entry[PAGE_TABLE_INDEX(addr)];
+}
+
+pde_t * find_pde_entry(struct page_directory * pg_dir, virt_addr addr){
+    if(!addr){
+        return 0;
+    }   
+    return &pg_dir->entry[PAGE_DIRECTORY_INDEX(addr)];
+}
+
+
+struct page_directory * current_pg_dir;
+
+void set_page_directory(struct page_directory * pg_dir){
+    current_pg_dir = pg_dir;
+    // set cr3 to page directory
+    __asm__ volatile("mov %0, %%cr3":: "r"(&pg_dir->entry));
+    // Toggle paging bit in c30
+    uint32_t cr0;
+    __asm__ volatile("mov %%cr0, %0": "=r"(cr0));
+    cr0 |= 0x80000000; 
+    __asm__ volatile("mov %0, %%cr0":: "r"(cr0));
+}
+
+void map_virt_page_to_phys(virt_addr virt, phys_addr phys){
+    struct page_directory * pg_dir = current_pg_dir;
+    pde_t * pd_entry = &pg_dir->entry[PAGE_DIRECTORY_INDEX(virt)];
+    
+    // Check if pde is present already. If not, we alloc a new frame for one.
+    if((*pd_entry & I86_PDE_PRESENT) != I86_PDE_PRESENT){
+        // make a frame. use that as our new page table
+        struct page_table * new_table = alloc_pg_tbl();
+        
+        pde_set_attr(pd_entry, I86_PDE_PRESENT);
+        pde_set_attr(pd_entry, I86_PDE_WRITABLE);
+        pde_set_frame(pd_entry, (phys_addr) new_table);
+    }
+    // We now have a present pde. So we just need to set the relevant pte bits.
+    struct page_table * tbl = PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    // let's assume we have idenitiy mapping at the bottom
+    pte_t * pt_entry = &tbl->entry[PAGE_TABLE_INDEX(virt)];
+
+    //Set the frame and mark present
+    pte_set_frame(pt_entry, phys);
+    pte_set_attr(pt_entry, I86_PTE_PRESENT);
+}
+
+#define KERNEL_START 0
+
+void init_vm(){
+    struct page_table * ident_tbl = alloc_pg_tbl();
+    // Identity map the first bit (0 - 1024^2)
+    for(int i = 0, addr = 0; i < 1024; i++, addr+= 4096){
+        pte_t pte = 0;
+
+        pte_set_attr(&pte, I86_PTE_PRESENT);
+        pte_set_frame(&pte, addr);
+
+        ident_tbl->entry[PAGE_TABLE_INDEX(addr)] = pte;
+    }
+    virt_addr virt = 0xc0000000;
+    phys_addr phys = KERNEL_START;
+    struct page_table * highmem_tbl = alloc_pg_tbl();
+    for(int i =0; i < 1024; i++, virt+=4096, phys+=4096){
+        pte_t pte = 0;
+
+        pte_set_attr(&pte, I86_PTE_PRESENT);
+        pte_set_frame(&pte, phys);
+
+        highmem_tbl->entry[PAGE_TABLE_INDEX(virt)] = pte;
+    }
+
+    struct page_directory * pg_dir = alloc_pg_dir();
+    pde_t * ident_de = &pg_dir->entry[PAGE_DIRECTORY_INDEX(0x0)];
+    pde_set_attr(ident_de, I86_PDE_PRESENT);
+    pde_set_attr(ident_de, I86_PDE_WRITABLE);
+    pde_set_frame(ident_de, (phys_addr) ident_tbl);
+
+    pde_t * highmem_de = &pg_dir->entry[PAGE_DIRECTORY_INDEX(0xc0000000)];
+    pde_set_attr(highmem_de, I86_PDE_PRESENT);
+    pde_set_attr(highmem_de, I86_PDE_WRITABLE);
+    pde_set_frame(highmem_de, (phys_addr) highmem_tbl);
+
+    set_page_directory(pg_dir);
+}
+
+void _paging_init() {
+    __cio_puts( " Paging:" );
+
+    init_vm();
+    paging_init = 1;
+    __cio_puts( " done" );
+
+}
+
+uint8_t is_paging_init(){
+    return paging_init;
+}
