@@ -1,17 +1,15 @@
 #define SP_KERNEL_SRC
 
 #include "phys_alloc.h"
-
+#include "kmem.h"
 
 struct phys_frame {
     uint32_t frame_data[1024];
 };
 
-#define num_frames 8192
-struct phys_frame frames[num_frames] __attribute__ ((aligned (4096)));
-uint8_t is_alloced[num_frames];
-
-
+uint32_t num_frames;
+struct phys_frame * frames;
+uint8_t is_alloced[8192];
 
 
 phys_addr alloc_frame(){
@@ -21,14 +19,29 @@ phys_addr alloc_frame(){
             return (phys_addr) &frames[i];
         }
     }
+
+    if(km_is_init()){
+        return _km_page_alloc(1);
+    }
+    
     return 0;
 }
 
 void free_frame(phys_addr addr) {
+    
     for(int i = 0; i< num_frames; i++){
         if(&frames[i] == addr){
             is_alloced[i] = false;
             break;
         }
     }
+    
+    if(km_is_init()){
+        _km_page_free(addr);
+    }
+}
+
+void _phys_alloc_init(phys_addr addr, uint32_t num_f){
+    frames = addr;
+    num_frames = num_f;
 }

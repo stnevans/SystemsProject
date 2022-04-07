@@ -180,7 +180,7 @@ int main( int argc, char *argv[] ) {
     process( "priority", offsetof(pcb_t,priority) );
     process( "quantum",offsetof(pcb_t,quantum) );
     process( "ticks", offsetof(pcb_t,ticks) );
-    process( "filler", offsetof(pcb_t,filler) );
+    process( "pg_dir", offsetof(pcb_t,pg_dir) );
 
     if( genheader ) {
         fputs( h_suffix, hfile );

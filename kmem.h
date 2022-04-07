@@ -126,6 +126,8 @@ void *_km_slice_alloc( void );
 */
 void _km_slice_free( void *block );
 
+bool_t km_is_init(void);
+
 #endif
 /* SP_ASM_SRC */
 

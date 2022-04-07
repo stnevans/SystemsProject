@@ -24,7 +24,7 @@
 #include "clock.h"
 #include "cio.h"
 #include "sio.h"
-
+#include "paging.h"
 /*
 ** PRIVATE DEFINITIONS
 */
@@ -159,6 +159,7 @@ static void _sys_fork( pcb_t *curr ) {
 
     // First, allocate a PCB.
     pcb_t *new = _pcb_alloc();
+    new->pg_dir = copy_pg_dir(curr->pg_dir);
     if( new == NULL ) {
         RET(curr) = E_NO_PROCS;
 #if TRACING_SYSRET
@@ -942,7 +943,6 @@ void _perform_exit( pcb_t *victim ) {
         victim->state = Zombie;
 
     }
-
     /*
     ** Note: we don't call _dispatch() here - we leave that for 
     ** the calling routine, as it's possible we don't need to

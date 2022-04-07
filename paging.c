@@ -9,7 +9,7 @@ uint8_t paging_init;
 
 struct page_table * alloc_pg_tbl(){
     struct page_table * pg_tbl = (struct page_table *) alloc_frame();
-    __memset(&pg_tbl->entry, sizeof(pg_tbl), 0);
+    __memset(pg_tbl, sizeof(pg_tbl->entry), 0);
 
     return pg_tbl;
 }
@@ -20,7 +20,7 @@ void free_pg_tbl(struct page_table * tbl){
 
 struct page_directory * alloc_pg_dir(){
     struct page_directory * pg_dir = (struct page_directory *) alloc_frame();
-    __memset(pg_dir, sizeof(pg_dir), 0);
+    __memset(pg_dir, sizeof(*pg_dir), 0);
     return pg_dir;
 }
 
@@ -35,7 +35,9 @@ void pte_set_attr(pte_t * pte, uint32_t attr) {
 void pte_del_attr(pte_t * pte, uint32_t attr) {
     *pte &= ~(attr);
 }
+
 void pte_set_frame(pte_t * pte, phys_addr phys) {
+    *pte &= (~I86_PTE_FRAME);
     *pte |= I86_PTE_FRAME & phys;
 }
 
@@ -52,9 +54,13 @@ void pde_del_attr(pde_t * pde, uint32_t attr) {
 }
 
 void pde_set_frame(pde_t * pde, phys_addr phys) {
+    *pde &= (~I86_PDE_FRAME);
     *pde |= I86_PDE_FRAME & phys;
 }
 
+phys_addr pde_get_frame(pde_t * pde){
+    return *pde & I86_PDE_FRAME;
+}
 
 // Allocate a frame, set the pte to use the frame, mark as present
 char alloc_page(pte_t * pte) {
@@ -67,7 +73,6 @@ char alloc_page(pte_t * pte) {
 
     return true;
 }
-
 
 // Free the backing frame and mark the page not present
 void free_page(pte_t * pte) {
@@ -92,8 +97,15 @@ pde_t * find_pde_entry(struct page_directory * pg_dir, virt_addr addr){
     return &pg_dir->entry[PAGE_DIRECTORY_INDEX(addr)];
 }
 
-
 struct page_directory * current_pg_dir;
+struct page_directory * kernel_pg_dir;
+struct page_directory * get_current_pg_dir(){
+    return current_pg_dir;
+}
+
+struct page_directory * get_kernel_pg_dir(){
+    return kernel_pg_dir;
+}
 
 void set_page_directory(struct page_directory * pg_dir){
     current_pg_dir = pg_dir;
@@ -127,17 +139,20 @@ void map_virt_page_to_phys(virt_addr virt, phys_addr phys){
     //Set the frame and mark present
     pte_set_frame(pt_entry, phys);
     pte_set_attr(pt_entry, I86_PTE_PRESENT);
+    pte_set_attr(pt_entry, I86_PTE_WRITABLE);
 }
 
 #define KERNEL_START 0
 
-void init_vm(){
+struct page_directory * get_base_pg_dir(){
     struct page_table * ident_tbl = alloc_pg_tbl();
-    // Identity map the first bit (0 - 1024^2)
-    for(int i = 0, addr = 0; i < 1024; i++, addr+= 4096){
+    // Identity map the first bit (0 - 100*1024)
+    for(int i = 0, addr = 0; i < 600; i++, addr+= 4096){
         pte_t pte = 0;
 
         pte_set_attr(&pte, I86_PTE_PRESENT);
+        // pte_set_attr(&pte, I86_PTE_WRITABLE);
+
         pte_set_frame(&pte, addr);
 
         ident_tbl->entry[PAGE_TABLE_INDEX(addr)] = pte;
@@ -149,6 +164,8 @@ void init_vm(){
         pte_t pte = 0;
 
         pte_set_attr(&pte, I86_PTE_PRESENT);
+        // pte_set_attr(&pte, I86_PTE_WRITABLE);
+
         pte_set_frame(&pte, phys);
 
         highmem_tbl->entry[PAGE_TABLE_INDEX(virt)] = pte;
@@ -165,16 +182,48 @@ void init_vm(){
     pde_set_attr(highmem_de, I86_PDE_WRITABLE);
     pde_set_frame(highmem_de, (phys_addr) highmem_tbl);
 
-    set_page_directory(pg_dir);
+    return pg_dir;
+}
+
+struct page_directory * copy_pg_dir(struct page_directory * pg_dir){
+    struct page_directory * pg_cpy = alloc_pg_dir();
+    for(int i = 0; i < 1024; i++){
+        pde_t * old_dir_entry = &pg_dir->entry[i];
+        if(*old_dir_entry){
+            struct page_table * old_pg_tbl = (struct page_table *) pde_get_frame(old_dir_entry);
+            struct page_table * new_pg_tbl = alloc_pg_tbl();
+            for(int j = 0; j < 1024; j++){
+                new_pg_tbl->entry[j] = old_pg_tbl->entry[j];
+            }
+            pde_t * new_dir_entry = &pg_cpy->entry[i];
+            *new_dir_entry = *old_dir_entry;
+            pde_set_frame(new_dir_entry, new_pg_tbl);
+        }
+    }
+    return pg_cpy;
+}
+
+// This just clears the page tables of a page directory.
+// Something else is repsonsible for clearing the backing frames for each pte
+void delete_pg_dir(struct page_directory * pg_dir){
+    for(int i = 0; i < 1024; i++){
+        pde_t * old_dir_entry = &pg_dir->entry[i];
+        if(*old_dir_entry){
+            free_pg_tbl((struct page_table * )pde_get_frame(old_dir_entry));
+        }
+    }
+    free_pg_dir(pg_dir);
 }
 
 void _paging_init() {
     __cio_puts( " Paging:" );
 
-    init_vm();
+    struct page_directory * pg_dir = get_base_pg_dir();
+    kernel_pg_dir = pg_dir;
+    set_page_directory(pg_dir);
+
     paging_init = 1;
     __cio_puts( " done" );
-
 }
 
 uint8_t is_paging_init(){

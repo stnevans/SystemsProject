@@ -60,6 +60,7 @@ phys_addr pte_get_frame(pte_t * pte);
 void pde_set_attr(pde_t* pde, uint32_t attr);
 void pde_del_attr(pde_t* pde, uint32_t attr);
 void pde_set_frame(pde_t* pde, phys_addr phys);
+phys_addr pde_get_frame(pde_t * pde);
 pte_t * find_pte_entry(struct page_table * pg_tbl, virt_addr addr);
 pde_t * find_pde_entry(struct page_directory * pd_tbl, virt_addr addr);
 
@@ -68,11 +69,15 @@ struct page_table * alloc_pg_tbl(void);
 void free_pg_tbl(struct page_table * tbl);
 struct page_directory * alloc_pg_dir(void);
 void free_pg_dir(struct page_directory * dir);
-void init_vm(void);
+struct page_directory * get_base_pg_dir(void);
 void map_virt_page_to_phys(virt_addr virt, phys_addr phys);
 void _paging_init(void);
-
+struct page_directory * get_current_pg_dir(void);
+void delete_pg_dir(struct page_directory * pg_dir);
 uint8_t is_paging_init(void);
+struct page_directory * copy_pg_dir(struct page_directory * pg_dir);
+void set_page_directory(struct page_directory * pg_dir);
+struct page_directory * get_kernel_pg_dir(void);
 #endif
 
 #endif

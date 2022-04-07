@@ -156,7 +156,7 @@ void _kinit( void ) {
     // careful to follow any module precedence requirements
     //
     // classic order:  kmem; queue; everything else
-    _paging_init(); //MUST *ACTUALLY* BE FIRST
+    // _paging_init(); //MUST *ACTUALLY* BE FIRST
 
     _km_init();     // MUST BE FIRST
 
@@ -197,11 +197,11 @@ void _kinit( void ) {
 
     // set up the stack
     new->context = _stk_setup( new->stack, (uint32_t) init, args );
-
+    new->pg_dir = copy_pg_dir(get_current_pg_dir());
     // add to the process table
     _processes[0] = new;
     _n_procs = 1;
-
+    
     // add it to the ready queue and then give it the CPU
     _schedule( new );
     _dispatch();
