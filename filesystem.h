@@ -4,13 +4,15 @@
 **
 ** @author CSCI-452 class of 20215
 **
-** Author: Eric Chen
+** author: Eric Chen
+**
+** description:
 */
 
-#ifndef _FILESYSTEM_H
-#define _FILESYSTEM_H
+#ifndef _FILESYSTEM_H_
+#define _FILESYSTEM_H_
 
-#include ¨common_h¨
+#include "common.h"
 
 /*
 ** General (C and/or assembly) definitions
@@ -28,24 +30,31 @@
 ** the C compiler should be put here.
 */
 
-#define MAX_SIZE
+#define MAX_FILENAME 8
+#define MAX_FILETYPE 3
+#define MAXBLOCKS 1024
+#define BLOCKSIZE 1024
 
 /*
 ** Types
 */
 
+// NOTE: Consider having one block that represents
+//    a directory, FAT, and data block
+
 typedef struct file_struct {
     char* filename;
     char* filetype;
-    cluster_t* cluster
+    uint32_t pos;
     uint32_t size;
 
 } file_t
 
-typedef struct cluster {
+typedef struct super_block {
+    
 
 
-} cluster_t
+} superblock_t
 
 /*
 ** Globals
@@ -56,9 +65,15 @@ typedef struct cluster {
 */
 file_t create_file(char* name, char* type, uint32_t size);
 
+void delete_file(file_t del_file);
+
 void file_open(file_t new_file, char* mode);
 
 void file_close(file_t new_file);
+
+void create_dir();
+
+void rm_dir();
 
 #endif
 /* SP_ASM_SRC */
