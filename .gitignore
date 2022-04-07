@@ -7,4 +7,5 @@
 BuildImage
 Offsets
 offsets.h
+build/
 .vscode/
