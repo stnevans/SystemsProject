@@ -182,8 +182,8 @@ void _kinit( void ) {
     // create the initial user process
     pcb_t *new = _pcb_alloc();
     assert( new != NULL );
-
-    new->stack = _stk_alloc();
+    // _current = new;
+    new->stack = _stk_alloc(NULL);
     assert( new->stack != NULL );
 
     // fill in the necessary fields

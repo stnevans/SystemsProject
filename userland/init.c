@@ -48,7 +48,7 @@ int32_t init( int argc, char *argv[] ) {
     // home up, clear on a TVI 925
     swritech( '\x1a' );
     // wait a bit
-    DELAY(STD);
+    // DELAY(STD);
 
     // a bit of Dante to set the mood
     swrites( "\n\nSpem relinquunt qui huc intrasti!\n\n\r" );
@@ -61,9 +61,12 @@ int32_t init( int argc, char *argv[] ) {
     //
     // we do the fork() and execp() directly because we
     // want to start it with 'Deferred' priority.
+// while(1);
+    // ARGS1( idle, "idle", "." );
+    ARGS2( idle, "idle", "A", "30" );
 
-    ARGS1( idle, "idle", "." );
     whom = fork();
+    while(1);
     if( whom < 0 ) {
         cwrites( "init, fork() for idle failed\n" );
     } else {
@@ -83,7 +86,7 @@ int32_t init( int argc, char *argv[] ) {
 
     // Now, start the "ordinary" users
     cwrites( "INIT: starting user processes\n" );
-
+    // while(1);
     // We use spawn() for these, as it invokes execp() with
     // 'User' as the priority level.
 
@@ -97,7 +100,7 @@ int32_t init( int argc, char *argv[] ) {
     swritech( ch );
     swritech( 'a' );
 #endif
-
+swrites("ADS");
 #ifdef SPAWN_B
     ARGS2( userB, "main1", "B", "30" );
     whom = spawn( main1, argv_userB );

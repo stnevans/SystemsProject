@@ -17,7 +17,7 @@
 
 #include "kmem.h"
 #include "process.h"
-
+#include "paging.h"
 #ifndef SP_ASM_SRC
 
 /*
@@ -71,7 +71,7 @@ void _stk_init( void );
 **
 ** @return pointer to the allocated stack, or NULL
 */
-stack_t *_stk_alloc( void );
+stack_t *_stk_alloc( struct page_directory * pg_dir );
 
 /**
 ** _stk_free() - free a stack

@@ -141,6 +141,41 @@ void map_virt_page_to_phys(virt_addr virt, phys_addr phys){
     pte_set_attr(pt_entry, I86_PTE_PRESENT);
     pte_set_attr(pt_entry, I86_PTE_WRITABLE);
 }
+void map_virt_page_to_phys_pg_dir(struct page_directory * pg_dir, virt_addr virt, phys_addr phys){
+    pde_t * pd_entry = &pg_dir->entry[PAGE_DIRECTORY_INDEX(virt)];
+    
+    // Check if pde is present already. If not, we alloc a new frame for one.
+    if((*pd_entry & I86_PDE_PRESENT) != I86_PDE_PRESENT){
+        // make a frame. use that as our new page table
+        struct page_table * new_table = alloc_pg_tbl();
+        
+        pde_set_attr(pd_entry, I86_PDE_PRESENT);
+        pde_set_attr(pd_entry, I86_PDE_WRITABLE);
+        pde_set_frame(pd_entry, (phys_addr) new_table);
+    }
+    // We now have a present pde. So we just need to set the relevant pte bits.
+    struct page_table * tbl = PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    // let's assume we have idenitiy mapping at the bottom
+    pte_t * pt_entry = &tbl->entry[PAGE_TABLE_INDEX(virt)];
+
+    //Set the frame and mark present
+    pte_set_frame(pt_entry, phys);
+    pte_set_attr(pt_entry, I86_PTE_PRESENT);
+    pte_set_attr(pt_entry, I86_PTE_WRITABLE);
+}
+
+
+void unmap_virt(struct page_directory * pg_dir, virt_addr virt){
+    pde_t * pd_entry = &pg_dir->entry[PAGE_DIRECTORY_INDEX(virt)];
+    
+    // We now have a present pde. So we just need to set the relevant pte bits.
+    struct page_table * tbl = PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    if(tbl){
+    // let's assume we have idenitiy mapping at the bottom
+        pte_t * pt_entry = &tbl->entry[PAGE_TABLE_INDEX(virt)];
+        *pt_entry = 0;
+    }
+}
 
 #define KERNEL_START 0
 
@@ -151,7 +186,7 @@ struct page_directory * get_base_pg_dir(){
         pte_t pte = 0;
 
         pte_set_attr(&pte, I86_PTE_PRESENT);
-        // pte_set_attr(&pte, I86_PTE_WRITABLE);
+        pte_set_attr(&pte, I86_PTE_WRITABLE);
 
         pte_set_frame(&pte, addr);
 
@@ -164,7 +199,7 @@ struct page_directory * get_base_pg_dir(){
         pte_t pte = 0;
 
         pte_set_attr(&pte, I86_PTE_PRESENT);
-        // pte_set_attr(&pte, I86_PTE_WRITABLE);
+        pte_set_attr(&pte, I86_PTE_WRITABLE);
 
         pte_set_frame(&pte, phys);
 

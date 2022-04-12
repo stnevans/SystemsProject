@@ -78,6 +78,8 @@ uint8_t is_paging_init(void);
 struct page_directory * copy_pg_dir(struct page_directory * pg_dir);
 void set_page_directory(struct page_directory * pg_dir);
 struct page_directory * get_kernel_pg_dir(void);
+void map_virt_page_to_phys_pg_dir(struct page_directory * pg_dir, virt_addr virt, phys_addr phys);
+void unmap_virt(struct page_directory * pg_dir, virt_addr virt);
 #endif
 
 #endif

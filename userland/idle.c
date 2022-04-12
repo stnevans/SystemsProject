@@ -21,6 +21,7 @@ int32_t idle( int argc, char *argv[] ) {
     // ignore the command-line arguments
     (void) argc;
     (void) argv;
+    // char sx = argv[0][0];
     
     // get some data about our starting point
     me = getpid();
@@ -37,7 +38,9 @@ int32_t idle( int argc, char *argv[] ) {
 
     for(;;) {
         DELAY(LONG);
-        write( CHAN_SIO, &ch, 1 );
+        write( CHAN_SIO, &argv[0][0], 1 );
+        write( CHAN_SIO, &argv[1][0], 1 );
+        
     }
 
     // we should never reach this point!
