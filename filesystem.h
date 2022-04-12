@@ -39,22 +39,62 @@
 ** Types
 */
 
-// NOTE: Consider having one block that represents
-//    a directory, FAT, and data block
+typedef struct bios_param_block{
+    char jmp[3];
+    char oem[8];
+    uint16_t bytes_per_sector;
+    uint8_t sectors_per_cluster;
+    uint16_t reserved_sectors;
+    uint8_t num_FAT;
+    uint16_t num_root_dir;
+    uint16_t total_sectors; //If 0 then > 65535 so use large_sector_count
+    uint8_t media_descriptor_type;
+    uint16_t num_sectors_per_FAT; //Only used if this was FAT12/FAT16
+    uint16_t num_sectors_per_track;
+    uint16_t num_heads_media;
+    uint32_t num_hidden_sectors;
+    uint32_t large_sector_count; //Used if more than 65535 sectors in the volume
 
-typedef struct file_struct {
-    char* filename;
-    char* filetype;
-    uint32_t pos;
-    uint32_t size;
+    //Extended Boot Record
+    uint32_t sectors_per_FAT32;
+    uint16_t flags;
+    uint16_t FAT_version_num;
+    uint32_t root_dir_cluster_num;
+    uint16_t sector_num_FSInfo;
+    uint16_t sector_num_backup;
+    uint8_t drive_num;
+    uint8_t windows_flags;
+    uint8_t signature;
+    uint32_t volume_id;
+    char volume_label[12];
+    char system_id[9];
+} bpb_t;
 
-} file_t
 
-typedef struct super_block {
-    
+typedef struct FAT32_struct {
+    uint32_t *FAT;
+    bpb_t bios_block;
+    uint32_t partition_begin_sector;
+    uint32_t FAT_begin_sector;
+    uint32_t cluster_begin_sector;
+    uint32_t cluster_size;
+    uint32_t current_cluster_pos;
+} f32_t;
 
 
-} superblock_t
+typedef struct director_entry {
+    char name[8];
+    char extension[3];
+    char attributes[9];
+    uint32_t first_cluster;
+    uint32_t file_size;
+} dir_entry_t;
+
+typedef struct directory {
+    uint32_t cluster;
+    dir_entry_t *entries;
+    uint32_t num_entries;
+} directory_t;
 
 /*
 ** Globals
@@ -63,13 +103,21 @@ typedef struct super_block {
 /*
 ** Prototypes
 */
-file_t create_file(char* name, char* type, uint32_t size);
 
-void delete_file(file_t del_file);
+f32_t *make_Filesystem(char *FATsystem);
+void end_Filesystem(f32_t *filesystem);
 
-void file_open(file_t new_file, char* mode);
+dir_entry_t create_file(char* name, char* type, uint32_t size);
 
-void file_close(file_t new_file);
+void delete_file(dir_entry_t* del_file);
+
+//void file_open(dir_entry_t* this_file, char* mode);
+
+//void file_close(dir_entry_t* this_file);
+
+void file_read(dir_entry_t* this_file);
+
+void file_write(dir_entry_t* this_file);
 
 void create_dir();
 
