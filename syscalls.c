@@ -300,11 +300,6 @@ static void _sys_execp( pcb_t *curr ) {
     **
     ** We choose option A.
     */
-    if(alloc_page_at(get_current_pg_dir(), 0x12345000)){
-        volatile int  * x = 0x12345000;
-        *x=1;
-        free_frame_at(get_current_pg_dir(), x);
-    }
 
     _schedule( curr );
     _dispatch();
