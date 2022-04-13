@@ -3,7 +3,8 @@
 #include "paging.h"
 #include "lib.h"
 #include "phys_alloc.h"
-#define	SP_KERNEL_SRC
+#include "x86arch.h"
+
 uint8_t paging_init;
 
 
@@ -239,7 +240,7 @@ struct page_directory * copy_pg_dir(struct page_directory * pg_dir){
 }
 
 // This just clears the page tables of a page directory.
-// Something else is repsonsible for clearing the backing frames for each pte
+// Something else is repsonsible for freeing the backing frames for each pte
 void delete_pg_dir(struct page_directory * pg_dir){
     for(int i = 0; i < 1024; i++){
         pde_t * old_dir_entry = &pg_dir->entry[i];
@@ -249,7 +250,56 @@ void delete_pg_dir(struct page_directory * pg_dir){
     }
     free_pg_dir(pg_dir);
 }
-#include "x86arch.h"
+
+
+// Return true if a page was allocated at the given virtual address.
+// Return false if a page was already there or it failed.
+bool_t alloc_page_at(struct page_directory * pg_dir, virt_addr virt){
+    pde_t * pd_entry = &pg_dir->entry[PAGE_DIRECTORY_INDEX(virt)];
+    
+    // Check if pde is present already. If not, we alloc a new frame for one.
+    if((*pd_entry & I86_PDE_PRESENT) != I86_PDE_PRESENT){
+        // make a frame. use that as our new page table
+        struct page_table * new_table = alloc_pg_tbl();
+        
+        pde_set_attr(pd_entry, I86_PDE_PRESENT);
+        pde_set_attr(pd_entry, I86_PDE_WRITABLE);
+        pde_set_frame(pd_entry, (phys_addr) new_table);
+    }
+    // We now have a present pde. So we just need to set the relevant pte bits.
+    struct page_table * tbl = PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    
+
+    // let's assume we have idenitiy mapping at the bottom
+    pte_t * pt_entry = &tbl->entry[PAGE_TABLE_INDEX(virt)];
+    if(*pt_entry){
+        return false;
+    }
+    phys_addr frame = alloc_frame();
+    if(!frame){
+        return false;
+    }
+    map_virt_page_to_phys_pg_dir(pg_dir, virt, frame);
+    return true;
+}
+
+void free_frame_at(struct page_directory * pg_dir, virt_addr virt){
+    pde_t * pd_entry = &pg_dir->entry[PAGE_DIRECTORY_INDEX(virt)];
+    if(!(*pd_entry)){
+        return;
+    }
+    if(pde_get_frame(pd_entry) == 0){
+        return;
+    }
+    struct page_table * tbl = PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    
+
+    // let's assume we have idenitiy mapping at the bottom
+    pte_t * pt_entry = &tbl->entry[PAGE_TABLE_INDEX(virt)];
+    phys_addr frame = pte_get_frame(pt_entry);
+    *pt_entry = 0;
+    free_frame(frame);    
+}
 
 static void _page_fault_isr( int vector, int code ) {
     uint32_t cr2;
@@ -260,7 +310,6 @@ static void _page_fault_isr( int vector, int code ) {
     :
     : "%eax");
     __cio_printf("We got a page fault at %x\n", cr2);
-    // swri("We got %p")
 }
 
 void _paging_init() {

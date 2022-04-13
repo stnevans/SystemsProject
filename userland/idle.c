@@ -40,7 +40,6 @@ int32_t idle( int argc, char *argv[] ) {
         DELAY(LONG);
         write( CHAN_SIO, &argv[0][0], 1 );
         write( CHAN_SIO, &argv[1][0], 1 );
-        
     }
 
     // we should never reach this point!

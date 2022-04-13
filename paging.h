@@ -80,6 +80,10 @@ void set_page_directory(struct page_directory * pg_dir);
 struct page_directory * get_kernel_pg_dir(void);
 void map_virt_page_to_phys_pg_dir(struct page_directory * pg_dir, virt_addr virt, phys_addr phys);
 void unmap_virt(struct page_directory * pg_dir, virt_addr virt);
+
+
+bool_t alloc_page_at(struct page_directory * pg_dir, virt_addr virt);
+void free_frame_at(struct page_directory * pg_dir, virt_addr virt);
 #endif
 
 #endif

@@ -212,10 +212,10 @@ void _pcb_cleanup( pcb_t *pcb ) {
 
     // release the PCB
     pcb->state = Free;  // just to be sure!
-    // if(pcb->pg_dir){
-    //     set_page_directory(get_kernel_pg_dir());
-    //     delete_pg_dir(pcb->pg_dir);
-    // }
+    if(pcb->pg_dir){
+        set_page_directory(get_kernel_pg_dir());
+        delete_pg_dir(pcb->pg_dir);
+    }
     _pcb_free( pcb );
 }
 
