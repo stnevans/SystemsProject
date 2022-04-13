@@ -66,7 +66,6 @@ int32_t init( int argc, char *argv[] ) {
     ARGS2( idle, "idle", "A", "30" );
 
     whom = fork();
-    while(1);
     if( whom < 0 ) {
         cwrites( "init, fork() for idle failed\n" );
     } else {

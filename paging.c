@@ -249,6 +249,19 @@ void delete_pg_dir(struct page_directory * pg_dir){
     }
     free_pg_dir(pg_dir);
 }
+#include "x86arch.h"
+
+static void _page_fault_isr( int vector, int code ) {
+    uint32_t cr2;
+    __asm__ __volatile__ (
+        "mov %%cr2, %%eax\n\t"
+        "mov %%eax, %0\n\t"
+    : "=m"(cr2)
+    :
+    : "%eax");
+    __cio_printf("We got a page fault at %x\n", cr2);
+    // swri("We got %p")
+}
 
 void _paging_init() {
     __cio_puts( " Paging:" );
@@ -258,6 +271,8 @@ void _paging_init() {
     set_page_directory(pg_dir);
 
     paging_init = 1;
+    __install_isr( INT_VEC_PAGE_FAULT, _page_fault_isr );
+
     __cio_puts( " done" );
 }
 
