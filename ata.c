@@ -13,6 +13,7 @@
 #include "common.h"
 #include "ata.h"
 #include "ports.h"
+#include "lib.h"
 
 /*
 ** PRIVATE DEFINITIONS

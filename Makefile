@@ -11,16 +11,16 @@
 #
 
 OS_C_SRC = clock.c kernel.c kmem.c libc.c process.c queues.c scheduler.c \
-	   sio.c stacks.c syscalls.c
+	   sio.c stacks.c syscalls.c filesystem.c ata.c
 OS_C_OBJ = clock.o kernel.o kmem.o libc.o process.o queues.o scheduler.o \
-	   sio.o stacks.o syscalls.o
+	   sio.o stacks.o syscalls.o filesystem.o ata.o
 
 OS_S_SRC = libs.S
 OS_S_OBJ = libs.o
 
 OS_HDRS  = clock.h common.h compat.h kdefs.h kernel.h kmem.h lib.h \
 	   offsets.h process.h queues.h scheduler.h sio.h stacks.h \
-	   syscalls.h
+	   syscalls.h filesystem.h ata.h ports.h
 
 OS_LIBS  =
 
@@ -300,3 +300,5 @@ ulibc.o: common.h kdefs.h cio.h kmem.h compat.h support.h kernel.h x86arch.h
 ulibc.o: process.h stacks.h queues.h lib.h
 ulibs.o: syscalls.h common.h kdefs.h cio.h kmem.h compat.h support.h kernel.h
 ulibs.o: x86arch.h process.h stacks.h queues.h lib.h
+filesystem.o: common.h filesystem.h ata.h lib.h
+ata.o: common.h ports.h ata.h lib.h

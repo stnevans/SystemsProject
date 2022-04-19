@@ -11,16 +11,10 @@
 #define SP_KERNEL_SRC
 
 #include "common.h"
-
 #include "filesystem.h"
+#include "ata.h"
+#include "lib.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <stdint.h>
-#include <math.h>
 
 /*
 ** PRIVATE DEFINITIONS
@@ -54,14 +48,42 @@ uint32_t current_cluster = 0;
 void read_bpb(f32_t *filesystem, bpb_t *bios_block){
     uint8_t sector0[512];
     //TODO Find bootsector
+    // ata_device_t dev = {}
+    //read_sectors_ATA_PIO(0, sector0, );
+
+    bios_block->bytes_per_sector;
+    bios_block->sectors_per_cluster;
+    bios_block->reserved_sectors;
+    bios_block->num_FAT;
+    bios_block->num_root_dir;
+    bios_block->total_sectors; 
+    bios_block->media_descriptor_type;
+    bios_block->num_sectors_per_FAT; 
+    bios_block->num_sectors_per_track;
+    bios_block->num_heads_media;
+    bios_block->num_hidden_sectors;
+    bios_block->large_sector_count; 
+
+    //Extended Boot Record
+    bios_block->sectors_per_FAT32;
+    bios_block->flags;
+    bios_block->FAT_version_num;
+    bios_block->root_dir_cluster_num;
+    bios_block->sector_num_FSInfo;
+    bios_block->sector_num_backup;
+    bios_block->drive_num;
+    bios_block->windows_flags;
+    bios_block->signature;
+    bios_block->volume_id;
 
 }
 
 f32_t *make_Filesystem(char *FATsystem){
-    f32_t *filesystem = kmalloc(sizeof(f32_t));
+    f32_t *filesystem;
+    __memclr(filesystem, sizeof(f32_t));
 
     //Get information about bpb
-    read_bpb(filesystem, filesystem->bios_block);
+    read_bpb(filesystem, &filesystem->bios_block);
 
     filesystem->partition_begin_sector = 0;
     filesystem->FAT_begin_sector = filesystem->partition_begin_sector * filesystem->bios_block.reserved_sectors;
@@ -71,15 +93,24 @@ f32_t *make_Filesystem(char *FATsystem){
 
     //Set up the File Allocation Table
     uint32_t FAT_size = 512 * filesystem->bios_block.sectors_per_FAT32;
-    filesystem->FAT = kmalloc(FAT_size);
+    __memclr(filesystem->FAT, FAT_size);
+    
     //Set up sectors
+    for(uint32_t sector_count = 0; sector_count < filesystem->bios_block.sectors_per_FAT32; sector_count++){
+        uint32_t this_sector[512];
+        // ata_device_t dev = {}
+        // read_sectors_ATA_PIO(filesystem->FAT_begin_sector + sector_count, this_sector, );
+
+
+    }
+
 
     return filesystem;
 }
 
 void end_Filesystem(f32_t *filesystem){
-    kfree(filesystem->FAT);
-    kfree(filesystem);
+    //free(filesystem->FAT);
+    //free(filesystem);
 }
 
 /**
@@ -91,7 +122,7 @@ void end_Filesystem(f32_t *filesystem){
 **
 ** @return ?
 */
-dir_entry_t create_file(char* new_name, char* type, uint32_t size){
+dir_entry_t *create_file(char* new_name, char* type, uint32_t size){
     if(strlen(new_name) > MAX_FILENAME){
         return -1;
     }
@@ -101,10 +132,11 @@ dir_entry_t create_file(char* new_name, char* type, uint32_t size){
 
     // TODO Check if filename exists in FAT
     
-    dir_entry_t* new_file = malloc(sizeof(dir_entry_t));
-    new_file->name = new_name;
-    new_file->extension = type;
-    new_file->file_size = size;
+    dir_entry_t *new_file;
+    __memclr(new_file, sizeof(dir_entry_t));
+    __strcpy(new_file->name, new_name);
+    __strcpy(new_file->extension, type);
+    __strcpy(new_file->file_size, size);
 
     // TODO Add new file to FAT
 
@@ -121,7 +153,7 @@ dir_entry_t create_file(char* new_name, char* type, uint32_t size){
 **
 ** @return ?
 */
-void file_read(dir_entry_t new_file){
+void file_read(f32_t *filesystem, dir_entry_t *new_file){
 
 }
 
@@ -134,7 +166,7 @@ void file_read(dir_entry_t new_file){
 **
 ** @return ?
 */
-void file_write(f32_t *filesystem, dir_entry_t new_file){
+void file_write(f32_t *filesystem, dir_entry_t *new_file){
 
 }
 
@@ -147,7 +179,7 @@ void file_write(f32_t *filesystem, dir_entry_t new_file){
 **
 ** @return ?
 */
-void delete_file(dir_entry_t del_file){
+void delete_file(f32_t *filesystem, dir_entry_t *del_file){
 
 }
 
@@ -162,7 +194,7 @@ void delete_file(dir_entry_t del_file){
 */
 void create_dir(f32_t *filesystem, directory_t *this_dir, char *dir_name){
     dir_entry_t *new_dir;
-    new_dir->name = dir_name;
+    __strcpy(new_dir->name, dir_name);
 
     file_write(filesystem, new_dir);
 }
@@ -178,7 +210,7 @@ void create_dir(f32_t *filesystem, directory_t *this_dir, char *dir_name){
 */
 void rm_dir(f32_t *filesystem, directory_t *dir){
     for(int i = 0; i < dir->num_entries; i++){
-        kfree(dir->entries[i].name);
+        //free(dir->entries[i].name);
     }
-    kfree(dir->entries);
+    //free(dir->entries);
 }

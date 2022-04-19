@@ -12,7 +12,7 @@
 #define _ATA_H_
 
 #include "common.h"
-#include <stdint.h>
+#include "lib.h"
 
 /*
 ** General (C and/or assembly) definitions

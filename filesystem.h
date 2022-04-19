@@ -13,6 +13,7 @@
 #define _FILESYSTEM_H_
 
 #include "common.h"
+#include "lib.h"
 
 /*
 ** General (C and/or assembly) definitions
@@ -107,17 +108,17 @@ typedef struct directory {
 f32_t *make_Filesystem(char *FATsystem);
 void end_Filesystem(f32_t *filesystem);
 
-dir_entry_t create_file(char* name, char* type, uint32_t size);
+dir_entry_t *create_file(char* new_name, char* type, uint32_t size);
 
-void delete_file(dir_entry_t* del_file);
+void delete_file(f32_t *filesystem, dir_entry_t* del_file);
 
 //void file_open(dir_entry_t* this_file, char* mode);
 
 //void file_close(dir_entry_t* this_file);
 
-void file_read(dir_entry_t* this_file);
+void file_read(f32_t *filesystem, dir_entry_t* this_file);
 
-void file_write(dir_entry_t* this_file);
+void file_write(f32_t *filesystem, dir_entry_t* this_file);
 
 void create_dir();
 
