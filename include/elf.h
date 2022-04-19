@@ -22,7 +22,6 @@
 #define EI_ABIVERSION 0x08
 #define EI_LENGTH 0x10
 
-
 typedef struct elf_header {
     uint8_t e_ident[EI_LENGTH]; // identity params
     uint32_t e_type: 16;        // object file type
@@ -50,5 +49,7 @@ typedef struct elf_program_header {
     uint32_t p_flags;  // flags
     uint32_t p_align;  // alignment
 } elf_program_header_t;
+
+uint32_t load_program(uint32_t address);
 
 #endif

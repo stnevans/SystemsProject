@@ -54,7 +54,6 @@ $(BUILD_DIR)/kernel/%.o: kernel/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -o $(@D)/$(*F).o -c kernel/$(*F).c
 
-
 $(BUILD_DIR)/prog.out: $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $(BUILD_DIR)prog.out $(OBJECTS)
 

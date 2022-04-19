@@ -9,7 +9,7 @@ CPP = cpp
 CPPFLAGS = $(USER_OPTIONS) -nostdinc $(INCLUDES)
 
 CC = gcc
-CFLAGS = -m32 -fno-pie -std=c99 -fno-stack-protector -fno-builtin -Wall -Wstrict-prototypes $(CPPFLAGS)
+CFLAGS = -m32 -std=c99 -fno-stack-protector -fno-builtin -Wall -Wstrict-prototypes $(CPPFLAGS)
 
 AS = as
 ASFLAGS = --32
@@ -22,9 +22,10 @@ BUILD_DIR = $(shell pwd)/build
 -include util/build.mk
 -include boot/build.mk
 -include kernel/build.mk
+-include sysroot/build.mk
 
 $(BUILD_DIR)/usb.img: offsets.h bootstrap.b prog.b prog.nl BuildImage prog.dis 
-	./BuildImage -d usb -o $(BUILD_DIR)/usb.img -b $(BUILD_DIR)/bootstrap.b $(BUILD_DIR)/prog.b 0x10000
+	./BuildImage -d usb -o $(BUILD_DIR)/usb.img -b $(BUILD_DIR)/bootstrap.b $(BUILD_DIR)/prog.b 0x10000 $(BUILD_DIR)/sysroot/main1.elf 0x20000
 
 $(BUILD_DIR)/floppy.img: bootstrap.b prog.b prog.nl BuildImage prog.dis 
 	./BuildImage -d floppy -o $(BUILD_DIR)/floppy.img -b $(BUILD_DIR)/bootstrap.b $(BUILD_DIR)/prog.b 0x10000
