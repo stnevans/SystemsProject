@@ -89,7 +89,7 @@ typedef struct context {
 // PCB needs to know what stacks look like, but the stacks.h header
 // needs to know what a context_t looks like.  Bleh.
 #include "stacks.h"
-
+#include "paging.h"
 // the process control block
 //
 // fields are ordered by size to avoid padding
@@ -119,8 +119,8 @@ typedef struct pcb_s {
 
     // filler, to round us up to 32 bytes
     // adjust this as fields are added/removed/changed
-    uint8_t filler[4];
-
+    // uint8_t filler[4];
+    struct page_directory * pg_dir;    
 } pcb_t;
 
 /*

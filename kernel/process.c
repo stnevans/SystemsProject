@@ -212,6 +212,10 @@ void _pcb_cleanup( pcb_t *pcb ) {
 
     // release the PCB
     pcb->state = Free;  // just to be sure!
+    if(pcb->pg_dir){
+        set_page_directory(get_kernel_pg_dir());
+        delete_pg_dir(pcb->pg_dir);
+    }
     _pcb_free( pcb );
 }
 
@@ -252,12 +256,15 @@ void _pcb_dump( const char *msg, register pcb_t *p ) {
 
     __cio_printf( "\n context %08x stack %08x",
                   (uint32_t) p->context, (uint32_t) p->stack );
+    __cio_printf( "\n pg_dir %08x",
+                  (uint32_t) p->pg_dir );
 
     // and the filler (just to be sure)
     __cio_puts( " fill: " );
-    for( int i = 0; i < sizeof(p->filler); ++i ) {
-        __cio_printf( "%02x", p->filler[i] );
-    }
+    // for( int i = 0; i < sizeof(p->pg_dir); ++i ) {
+    //     __cio_printf( "%02x", p->filler[i] );
+    // }
+
     __cio_putchar( '\n' );
 }
 

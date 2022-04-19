@@ -13,7 +13,7 @@
 #include "bootstrap.h"
 #include "stacks.h"
 #include "kernel.h"
-
+#include "scheduler.h"
 // also need the exit_helper() entry point
 void exit_helper( void );
 
@@ -66,7 +66,7 @@ void _stk_init( void ) {
     _stack_list = NULL;
 
     // allocate the first stack for the OS
-    _system_stack = _stk_alloc();
+    _system_stack = _stk_alloc(NULL);
     assert( _system_stack != NULL );
 
     // set the initial ESP for the OS - it should point to the
@@ -85,15 +85,23 @@ void _stk_init( void ) {
 **
 ** @return a pointer to the allocated stack, or NULL
 */
-stack_t *_stk_alloc( void ) {
+stack_t *_stk_alloc( struct page_directory * pg_dir ) {
     stack_t *new;
 
     // see if there is an available stack
     if( _stack_list == NULL ) {
 
         // none available - create a new one
-        new = (stack_t *) _km_page_alloc( STACK_PAGES );
-
+        char * val = _km_page_alloc( STACK_PAGES*2 );
+        for(int i = 0; i < STACK_PAGES*2; i++){
+            if(!pg_dir){
+                map_virt_page_to_phys(0xdf000000 + val + i * 4096, val + i * 4096);
+            }else{
+                map_virt_page_to_phys_pg_dir(pg_dir, 0xdf000000 + val + i * 4096, val + i * 4096);    
+            }
+        }
+        val += 0xdf000000;
+        new = val;
     } else {
 
         // OK, we know that there is at least one free stack;
@@ -101,6 +109,26 @@ stack_t *_stk_alloc( void ) {
 
         new = _stack_list;
 
+
+
+        // Map the page for the relevant process
+        char * val = (char *) new;
+        val -= 0xdf000000;
+
+        for(int i = 0; i < STACK_PAGES*2; i++){
+            if(!pg_dir){
+                map_virt_page_to_phys(0xdf000000 + val + i * 4096, val + i * 4096);
+            }else{
+                map_virt_page_to_phys_pg_dir(pg_dir, 0xdf000000 + val + i * 4096, val + i * 4096);    
+            }
+        }
+
+        // Map the pages for us!
+        if(pg_dir){
+            for(int i = 0; i < STACK_PAGES*2; i++){
+                map_virt_page_to_phys(0xdf000000 + val + i * 4096, val + i * 4096);
+            }
+        }
         // unlink it by making its successor the new head of
         // the list.  this is strange, because GCC is weird
         // about doing something like
@@ -108,10 +136,15 @@ stack_t *_stk_alloc( void ) {
         // because 'new' is an array type
         //
         _stack_list = (stack_t *) ((uint32_t *)new)[0];
-
+        
         // clear out the fields in this one just to be safe
         __memclr( new, sizeof(stack_t) );
-
+        //Unmap the pages for us
+        if(pg_dir){
+            for(int i = 0; i < STACK_PAGES*2; i++){
+                unmap_virt(_current->pg_dir, 0xdf000000 + val + i * 4096);
+            }
+        }
     }
 
 #if TRACING_STACKS

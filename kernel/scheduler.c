@@ -10,7 +10,7 @@
 
 #include "common.h"
 #include "syscalls.h"
-
+#include "paging.h"
 /*
 ** PRIVATE DEFINITIONS
 */
@@ -143,4 +143,5 @@ void _dispatch( void ) {
 
     // make this the current process
     _current = pcb;
+    set_page_directory(_current->pg_dir);
 }

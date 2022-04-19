@@ -24,7 +24,7 @@
 #include "clock.h"
 #include "cio.h"
 #include "sio.h"
-
+#include "paging.h"
 /*
 ** PRIVATE DEFINITIONS
 */
@@ -159,6 +159,7 @@ static void _sys_fork( pcb_t *curr ) {
 
     // First, allocate a PCB.
     pcb_t *new = _pcb_alloc();
+    new->pg_dir = copy_pg_dir(curr->pg_dir);
     if( new == NULL ) {
         RET(curr) = E_NO_PROCS;
 #if TRACING_SYSRET
@@ -168,7 +169,7 @@ static void _sys_fork( pcb_t *curr ) {
     }
 
     // Create the stack for the child.
-    new->stack = _stk_alloc();
+    new->stack = _stk_alloc(new->pg_dir);
     if( new->stack == NULL ) {
         _pcb_free( new );
         RET(curr) = E_NO_PROCS;
@@ -179,8 +180,17 @@ static void _sys_fork( pcb_t *curr ) {
     }
 
     // Duplicate the parent's stack.
+    for(int i = 0; i < STACK_PAGES*2; i++){
+        char * val = new->stack;
+        val -= 0xdf000000;
+        map_virt_page_to_phys(0xdf000000 + val + i * 4096, val + i * 4096);    
+    }
     __memcpy( (void *)new->stack, (void *)curr->stack, sizeof(stack_t) );
-
+    for(int i = 0; i < STACK_PAGES*2; i++){
+        char * val = new->stack;
+        val -= 0xdf000000;
+        unmap_virt(_current->pg_dir, 0xdf000000 + val + i * 4096);    
+    }
     // Set the child's identity.
     new->pid = _next_pid++;
     new->ppid = curr->pid;
@@ -214,6 +224,9 @@ static void _sys_fork( pcb_t *curr ) {
         *bp += offset;
         bp = (uint32_t *) *bp;
     }
+    // char dst[32];
+    // __sprint(dst, "bp %llx\n", bp);
+    // swrites(dst);
 
     // Set the return values for the two processes.
     RET(curr) = new->pid;
@@ -942,7 +955,6 @@ void _perform_exit( pcb_t *victim ) {
         victim->state = Zombie;
 
     }
-
     /*
     ** Note: we don't call _dispatch() here - we leave that for 
     ** the calling routine, as it's possible we don't need to

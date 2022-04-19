@@ -21,6 +21,7 @@
 #include "sio.h"
 #include "scheduler.h"
 #include "support.h"
+#include "paging.h"
 
 // need addresses of some user functions
 #include "users.h"
@@ -155,8 +156,10 @@ void _kinit( void ) {
     // careful to follow any module precedence requirements
     //
     // classic order:  kmem; queue; everything else
+    // _paging_init(); //MUST *ACTUALLY* BE FIRST
 
     _km_init();     // MUST BE FIRST
+
     // other module initialization calls here
     _queue_init();  // MUST BE SECOND
     _pcb_init();
@@ -179,8 +182,8 @@ void _kinit( void ) {
     // create the initial user process
     pcb_t *new = _pcb_alloc();
     assert( new != NULL );
-
-    new->stack = _stk_alloc();
+    // _current = new;
+    new->stack = _stk_alloc(NULL);
     assert( new->stack != NULL );
 
     // fill in the necessary fields
@@ -194,11 +197,11 @@ void _kinit( void ) {
 
     // set up the stack
     new->context = _stk_setup( new->stack, (uint32_t) init, args );
-
+    new->pg_dir = copy_pg_dir(get_current_pg_dir());
     // add to the process table
     _processes[0] = new;
     _n_procs = 1;
-
+    
     // add it to the ready queue and then give it the CPU
     _schedule( new );
     _dispatch();

@@ -54,7 +54,8 @@
 #include "cio.h"
 
 #include "kmem.h"
-
+#include "paging.h"
+#include "phys_alloc.h"
 /*
 ** PRIVATE DEFINITIONS
 */
@@ -187,6 +188,21 @@ extern int _end;    // end of the BSS section - provided by the linker
 static void _add_block( uint32_t base, uint32_t length ) {
     Blockinfo *block;
 
+
+    if(!is_paging_init()){
+        if(length >= 40 * SZ_PAGE){
+            _phys_alloc_init(base, 40);
+            _paging_init();
+            for(int i = 0; i < 40 * SZ_PAGE; i+=SZ_PAGE){
+                map_virt_page_to_phys(base + i, base + i);
+            }
+            base += 40* SZ_PAGE;
+            length -= 40 * SZ_PAGE;
+
+        }else{
+            PANIC(0, "Not enough mem for paging - fix this.");
+        }
+    }
     // don't add it if it isn't at least 4K
     if( length < SZ_PAGE ) {
         return;
@@ -201,6 +217,17 @@ static void _add_block( uint32_t base, uint32_t length ) {
     // create the "block"
 
     block = (Blockinfo *) base;
+    if(is_paging_init()){
+        uint32_t virt = 0+base;
+        // let's identity map this block for now
+        for(int i = 0; i < length; i+=SZ_PAGE){
+            map_virt_page_to_phys(virt + i,base + i);
+        }
+        __cio_puts("Writing block");
+        // block = base +
+        block = (Blockinfo *) virt;
+    }
+
     block->pages = B2P(length);
     block->next = NULL;
 
@@ -376,7 +403,7 @@ void _km_init( void ) {
 
         uint32_t b32 = base   & ADDR_LOW_HALF;
         uint32_t l32 = length & ADDR_LOW_HALF;
-
+        
         _add_block( b32, l32 );
     }
 
@@ -387,6 +414,9 @@ void _km_init( void ) {
     __cio_puts( " done" );
 }
 
+bool_t km_is_init(void){
+    return _km_initialized;
+}
 /**
 ** Name:    _km_dump
 **
@@ -482,7 +512,6 @@ void *_km_page_alloc( uint32_t count ) {
         // return this chunk
         block = chunk;
     }
-
     return( block );
 }
 
