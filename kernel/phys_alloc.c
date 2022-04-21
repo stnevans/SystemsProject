@@ -21,7 +21,7 @@ phys_addr alloc_frame(){
     }
 
     if(km_is_init()){
-        return _km_page_alloc(1);
+        return (phys_addr) _km_page_alloc(1);
     }
     
     return 0;
@@ -30,18 +30,18 @@ phys_addr alloc_frame(){
 void free_frame(phys_addr addr) {
     
     for(int i = 0; i< num_frames; i++){
-        if(&frames[i] == addr){
+        if(&frames[i] == (void *) addr){
             is_alloced[i] = false;
             break;
         }
     }
     
     if(km_is_init()){
-        _km_page_free(addr);
+        _km_page_free((void *) addr);
     }
 }
 
 void _phys_alloc_init(phys_addr addr, uint32_t num_f){
-    frames = addr;
+    frames = (struct phys_frame *)addr;
     num_frames = num_f;
 }
