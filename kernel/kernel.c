@@ -156,9 +156,8 @@ void _kinit( void ) {
     // careful to follow any module precedence requirements
     //
     // classic order:  kmem; queue; everything else
-    // _paging_init(); //MUST *ACTUALLY* BE FIRST
 
-    _km_init();     // MUST BE FIRST
+    _km_init();     // MUST BE FIRST. Initializes the memory AND paging
 
     // other module initialization calls here
     _queue_init();  // MUST BE SECOND
