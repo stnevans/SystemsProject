@@ -13,7 +13,7 @@ KERNEL_OBJS = \
 #
 
 OS_C_SRC = kernel/clock.c kernel/kernel.c kernel/kmem.c kernel/libc.c kernel/process.c kernel/queues.c kernel/scheduler.c \
-	   kernel/sio.c kernel/stacks.c kernel/syscalls.c kernel/paging.c kernel/phys_alloc.c
+	   kernel/sio.c kernel/stacks.c kernel/syscalls.c kernel/paging.c kernel/phys_alloc.c kernel/elf_loader.c
 OS_C_OBJ = $(patsubst %.c, $(BUILD_DIR)/%.o, $(OS_C_SRC))
 
 OS_S_SRC = kernel/libs.S

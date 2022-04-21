@@ -4,6 +4,8 @@
 #include "users.h"
 #include "ulib.h"
 
+#include "elf_loader.h"
+
 /**
 ** Initial process; it starts the other top-level user processes.
 **
@@ -83,6 +85,8 @@ int32_t init( int argc, char *argv[] ) {
 
     // Now, start the "ordinary" users
     cwrites( "INIT: starting user processes\n" );
+
+    load_program(0x20000);
 
     // We use spawn() for these, as it invokes execp() with
     // 'User' as the priority level.

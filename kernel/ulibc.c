@@ -432,7 +432,7 @@ void sprint( char *dst, char *fmt, ... ) {
                 break;
 
             case 'x':
-                len = cvt_hex( buf, *ap++ ) + 2;
+                len = cvt_hex( buf, *ap++ );
                 dst = padstr( dst, buf, len, width, leftadjust, padchar );
                 break;
 
