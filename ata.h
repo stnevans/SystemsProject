@@ -5,7 +5,7 @@
 **
 ** author: Jacob Doll & Eric Chen
 **
-** description:
+** description: Header file for ATA driver
 */
 
 #ifndef _ATA_H_

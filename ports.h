@@ -12,6 +12,7 @@
 #define _PORTS_H_
 
 #include "lib.h"
+#include "x86arch.h"
 
 /*
 ** General (C and/or assembly) definitions
