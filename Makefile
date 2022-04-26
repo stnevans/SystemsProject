@@ -25,7 +25,7 @@ BUILD_DIR = $(shell pwd)/build
 -include sysroot/build.mk
 
 $(BUILD_DIR)/usb.img: offsets.h bootstrap.b prog.b prog.nl BuildImage prog.dis user
-	./BuildImage -d usb -o $(BUILD_DIR)/usb.img -b $(BUILD_DIR)/bootstrap.b $(BUILD_DIR)/prog.b 0x10000 $(BUILD_DIR)/sysroot/main1.elf 0x20000
+	./BuildImage -d usb -o $(BUILD_DIR)/usb.img -b $(BUILD_DIR)/bootstrap.b $(BUILD_DIR)/prog.b 0x10000 $(BUILD_DIR)/sysroot/idle.elf 0x20000
 
 $(BUILD_DIR)/floppy.img: bootstrap.b prog.b prog.nl BuildImage prog.dis 
 	./BuildImage -d floppy -o $(BUILD_DIR)/floppy.img -b $(BUILD_DIR)/bootstrap.b $(BUILD_DIR)/prog.b 0x10000

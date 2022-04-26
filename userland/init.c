@@ -70,7 +70,8 @@ int32_t init( int argc, char *argv[] ) {
         cwrites( "init, fork() for idle failed\n" );
     } else {
         if( whom == 0 ) {
-            execp( idle, Deferred, argv_idle );
+            uint32_t idle_entry = elf_load_program(0x20000);
+            execp( idle_entry, Deferred, argv_idle );
             cwrites( "init, execp() for idle failed\n" );
             exit( FAILURE );
         } else {
@@ -85,8 +86,6 @@ int32_t init( int argc, char *argv[] ) {
 
     // Now, start the "ordinary" users
     cwrites( "INIT: starting user processes\n" );
-
-    elf_load_program(0x20000);
 
     // We use spawn() for these, as it invokes execp() with
     // 'User' as the priority level.

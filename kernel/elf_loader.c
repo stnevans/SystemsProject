@@ -16,15 +16,10 @@
 static int elf_load_segment(uint32_t addr, uint32_t offset, uint32_t vaddr, uint32_t size, uint32_t align) {
     uint32_t paddr = addr + offset;
     uint32_t num_pages = (size / align) + 1; 
-    char buf[128];
 
-    swrites("elf_load_segment\n");
     if (!vaddr) return 0;
 
     while (num_pages) {
-        sprint(buf, "Mapping Region: %x: %x\n", vaddr, paddr);
-        swrites(buf);
-
         map_virt_page_to_phys(vaddr, paddr);
 
         paddr += align;
@@ -38,9 +33,6 @@ static int elf_load_segment(uint32_t addr, uint32_t offset, uint32_t vaddr, uint
 static int elf_read_phdrs(uint32_t addr, uint32_t phoff, uint16_t phentsize, uint16_t phnum) {
     uint32_t phaddr = addr + phoff;
     Elf32_Phdr *curr;
-
-    swrites("elf_read_phdrs\n");
-
 
     while (phnum) {
         curr = (Elf32_Phdr *)(phaddr);
@@ -79,5 +71,5 @@ uint32_t elf_load_program(uint32_t addr) {
         return 0;
     }
 
-    return 0;
+    return entry;
 }

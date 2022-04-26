@@ -20,4 +20,4 @@ main1: $(BUILD_DIR)/sysroot/main1.elf
 main2: $(BUILD_DIR)/sysroot/main2.elf
 main3: $(BUILD_DIR)/sysroot/main3.elf
 
-user: idle main1 main2 main3
+user: idle
