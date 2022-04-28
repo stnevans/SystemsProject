@@ -46,12 +46,12 @@
 ** Performs a fork(); on success, the child performs an execp()
 ** with 'User' as the priority level.
 **
-** @param entry The function which is the entry point of the new code
+** @param phys_addr The address of the binary in memory
 ** @param args  The argument vector for the new process
 **
 ** @returns PID of the new process, or an error code
 */
-pid_t spawn( int32_t (*entry)(int,char*[]), char *args[] ) {
+pid_t spawn( uint32_t phys_addr, char *args[] ) {
     pid_t pid;
 
     pid = fork();
@@ -61,14 +61,14 @@ pid_t spawn( int32_t (*entry)(int,char*[]), char *args[] ) {
     }
 
     // we are the child
-    execp( entry, User, args );
+    execp( phys_addr, User, args );
 
     // uh-oh....
 
     char buf[256];
 
     pid = getpid();
-    sprint( buf, "PID %d exec() of %08x failed\n", pid, (uint32_t) entry );
+    sprint( buf, "PID %d exec() of %08x failed\n", pid, (uint32_t) phys_addr );
     cwrites( buf );
 
     exit( E_FAILURE );
@@ -82,13 +82,13 @@ pid_t spawn( int32_t (*entry)(int,char*[]), char *args[] ) {
 **
 ** Calls execp(entry,getprio(),args)
 **
-** @param entry The entry point of the new code
+** @param phys_addr The location of the binary in meory
 ** @param args  Argument vector for the process
 **
 ** @returns Only on failure, returns an error code
 */
-void exec( int32_t (*entry)(int,char*[]), char *args[] ) {
-    execp( entry, getprio(), args );
+void exec( uint32_t phys_addr, char *args[] ) {
+    execp( phys_addr, getprio(), args );
 }
 
 /**

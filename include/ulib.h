@@ -65,15 +65,15 @@ pid_t fork( void );
 /**
 ** execp - replace this program with a different one
 **
-** usage:   execp(entry,prio,args)
+** usage:   execp(phys_addr,prio,args)
 **
-** @param entry The entry point of the new code
+** @param phys_addr The location of binary in memory
 ** @param prio  The desired priority for this process
 ** @param args  Argument vector for the process
 **
 ** @returns Only on failure
 */
-void execp( int32_t (*entry)(int,char*[]), prio_t prio, char *args[] );
+void execp( uint32_t phys_addr, prio_t prio, char *args[] );
 
 /**
 ** kill - terminate a process with extreme prejudice
@@ -211,26 +211,26 @@ void bogus( void );
 ** Performs a fork(); on success, the child performs an execp()
 ** with User as the priority value.
 **
-** @param entry The function which is the entry point of the new code
+** @param phys_addr The address of the binary in memory
 ** @param args  The argument vector for the new process
 **
 ** @returns PID of the new process, or an error code
 */
-pid_t spawn( int32_t (*entry)(int,char*[]), char *args[] );
+pid_t spawn( uint32_t phys_addr, char *args[] );
 
 /** 
 ** exec - replace this program with a different one
 **
 ** usage:   exec(entry,args)
 **
-** Calls execp(entry,getprio(),args)
+** Calls execp(phys_addr,getprio(),args)
 **
-** @param entry The entry point of the new code
+** @param phys_addr The address of the binary in memory
 ** @param args  Argument vector for the process
 **
 ** @returns Only on failure
 */
-void exec( int32_t (*entry)(int,char*[]), char *args[] );
+void exec( uint32_t phys_addr, char *args[] );
 
 /**
 ** cwritech(ch) - write a single character to the console

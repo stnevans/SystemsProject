@@ -25,6 +25,8 @@
 #include "cio.h"
 #include "sio.h"
 #include "paging.h"
+#include "elf_loader.h"
+
 /*
 ** PRIVATE DEFINITIONS
 */
@@ -266,7 +268,7 @@ static void _sys_fork( pcb_t *curr ) {
 **              different program
 **
 ** implements:
-**      void exec( uint32_t entry, prio_t prio, char *args[] );
+**      void exec( uint32_t phys_addr, prio_t prio, char *args[] );
 **
 ** returns:
 **      only on failure
@@ -280,8 +282,10 @@ static void _sys_execp( pcb_t *curr ) {
     __cio_printf( "--> _sys_execp, pid %d\n", curr->pid );
 #endif
 
+    uint32_t elf_entry = elf_load_program(entry);
+
     // Set up the new stack for the user.
-    context_t *ct = _stk_setup( curr->stack, entry, args );
+    context_t *ct = _stk_setup( curr->stack, elf_entry, args );
     assert( ct != NULL );
 
     // Copy the context pointer into the current PCB.

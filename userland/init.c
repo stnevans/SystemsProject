@@ -4,8 +4,6 @@
 #include "users.h"
 #include "ulib.h"
 
-#include "elf_loader.h"
-
 /**
 ** Initial process; it starts the other top-level user processes.
 **
@@ -70,8 +68,7 @@ int32_t init( int argc, char *argv[] ) {
         cwrites( "init, fork() for idle failed\n" );
     } else {
         if( whom == 0 ) {
-            uint32_t idle_entry = elf_load_program(0x20000);
-            execp( idle_entry, Deferred, argv_idle );
+            execp( 0x20000, Deferred, argv_idle );
             cwrites( "init, execp() for idle failed\n" );
             exit( FAILURE );
         } else {
