@@ -68,6 +68,9 @@
 */
 void _km_init( void );
 
+// Test if km module has been init
+bool_t km_is_init(void);
+
 /**
 ** Name:    _km_dump
 **

@@ -133,7 +133,7 @@ void map_virt_page_to_phys(virt_addr virt, phys_addr phys){
         pde_set_frame(pd_entry, (phys_addr) new_table);
     }
     // We now have a present pde. So we just need to set the relevant pte bits.
-    struct page_table * tbl = PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    struct page_table * tbl = (struct page_table *) PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
     // let's assume we have idenitiy mapping at the bottom
     pte_t * pt_entry = &tbl->entry[PAGE_TABLE_INDEX(virt)];
 
@@ -155,7 +155,7 @@ void map_virt_page_to_phys_pg_dir(struct page_directory * pg_dir, virt_addr virt
         pde_set_frame(pd_entry, (phys_addr) new_table);
     }
     // We now have a present pde. So we just need to set the relevant pte bits.
-    struct page_table * tbl = PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    struct page_table * tbl = (struct page_table *) PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
     // let's assume we have idenitiy mapping at the bottom
     pte_t * pt_entry = &tbl->entry[PAGE_TABLE_INDEX(virt)];
 
@@ -170,7 +170,7 @@ void unmap_virt(struct page_directory * pg_dir, virt_addr virt){
     pde_t * pd_entry = &pg_dir->entry[PAGE_DIRECTORY_INDEX(virt)];
     
     // We now have a present pde. So we just need to set the relevant pte bits.
-    struct page_table * tbl = PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    struct page_table * tbl = (struct page_table *) PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
     if(tbl){
     // let's assume we have idenitiy mapping at the bottom
         pte_t * pt_entry = &tbl->entry[PAGE_TABLE_INDEX(virt)];
@@ -233,7 +233,7 @@ struct page_directory * copy_pg_dir(struct page_directory * pg_dir){
             }
             pde_t * new_dir_entry = &pg_cpy->entry[i];
             *new_dir_entry = *old_dir_entry;
-            pde_set_frame(new_dir_entry, new_pg_tbl);
+            pde_set_frame(new_dir_entry, (phys_addr) new_pg_tbl);
         }
     }
     return pg_cpy;
@@ -267,7 +267,7 @@ bool_t alloc_page_at(struct page_directory * pg_dir, virt_addr virt){
         pde_set_frame(pd_entry, (phys_addr) new_table);
     }
     // We now have a present pde. So we just need to set the relevant pte bits.
-    struct page_table * tbl = PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    struct page_table * tbl = (struct page_table *) PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
     
 
     // let's assume we have idenitiy mapping at the bottom
@@ -291,7 +291,7 @@ void free_frame_at(struct page_directory * pg_dir, virt_addr virt){
     if(pde_get_frame(pd_entry) == 0){
         return;
     }
-    struct page_table * tbl = PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    struct page_table * tbl = (struct page_table *) PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
     
 
     // let's assume we have idenitiy mapping at the bottom

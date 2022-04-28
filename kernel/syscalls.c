@@ -183,15 +183,15 @@ static void _sys_fork( pcb_t *curr ) {
 
     // Duplicate the parent's stack.
     for(int i = 0; i < STACK_PAGES*2; i++){
-        char * val = new->stack;
+        char * val = (char *) new->stack;
         val -= 0xdf000000;
-        map_virt_page_to_phys(0xdf000000 + val + i * 4096, val + i * 4096);    
+        map_virt_page_to_phys((virt_addr)(0xdf000000 + val + i * 4096), (phys_addr)(val + i * 4096));    
     }
     __memcpy( (void *)new->stack, (void *)curr->stack, sizeof(stack_t) );
     for(int i = 0; i < STACK_PAGES*2; i++){
-        char * val = new->stack;
+        char * val = (char *) new->stack;
         val -= 0xdf000000;
-        unmap_virt(_current->pg_dir, 0xdf000000 + val + i * 4096);    
+        unmap_virt(_current->pg_dir, (virt_addr)(0xdf000000 + val + i * 4096));    
     }
     // Set the child's identity.
     new->pid = _next_pid++;
