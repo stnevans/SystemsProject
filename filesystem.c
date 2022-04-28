@@ -282,9 +282,6 @@ void file_write(f32_t *filesystem, dir_entry_t *new_file, directory_t *this_dir)
     // Writes cluster's address into directory entry
     new_file->first_cluster_low_bytes = filesystem->current_cluster_pos;
 
-    //TODO: Add functionality for cluster chain
-
-
 }
 
 /**
@@ -313,7 +310,6 @@ void delete_file(f32_t *filesystem, dir_entry_t *del_file, directory_t *this_dir
     // Removes file from FAT by setting cluster chain to zero
     filesystem->FAT[del_file->first_cluster_low_bytes] = FAT_FREE_CLUSTER;
 
-    // TODO: Add functionality to clear cluster chain
 }
 
 /**

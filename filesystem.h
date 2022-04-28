@@ -119,7 +119,7 @@ typedef struct director_entry {
 /*
 ** Structure used for a directory containing multiple directory entries
 **
-** *Note: May not be needed*
+**
 */
 typedef struct directory {
     uint32_t cluster_num;
