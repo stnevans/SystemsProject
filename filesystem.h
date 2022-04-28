@@ -86,14 +86,13 @@ typedef struct bios_param_block{
 /*
 ** FAT Filesystem that contains the boot record, the file allocation table (FAT)
 ** and information about the sectors, clusters, and where they begin.
-**
+** Similar to FSInfo Structure
 */
 typedef struct FAT32_struct {
     bpb_t bios_block;
     uint32_t *FAT;
     uint32_t data_begin_sector;
     uint32_t FAT_begin_sector;
-    uint32_t full_cluster_size;
     uint32_t current_cluster_pos;
 } f32_t;
 
@@ -136,15 +135,11 @@ typedef struct directory {
 ** Prototypes
 */
 
-f32_t *make_Filesystem();
+f32_t *make_Filesystem(void);
 
 void end_Filesystem(f32_t *filesystem);
 
-dir_entry_t *create_file(char* new_name, char* type, uint32_t size, uint32_t cluster_num);
-
-//void file_open(dir_entry_t* this_file, char* mode);
-
-//void file_close(dir_entry_t* this_file);
+dir_entry_t *create_file(char* new_name, char* type, uint8_t attribute, uint32_t size, uint32_t cluster_num);
 
 uint32_t *dir_read(f32_t *filesystem, dir_entry_t* this_file, uint32_t cluster);
 
@@ -154,7 +149,7 @@ void delete_file(f32_t *filesystem, dir_entry_t* del_file, directory_t *this_dir
 
 directory_t *create_dir(f32_t *filesystem, uint32_t cluster);
 
-void rm_dir();
+void rm_dir(f32_t *filesystem, directory_t *dir);
 
 #endif
 /* SP_ASM_SRC */

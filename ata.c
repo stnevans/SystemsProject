@@ -52,7 +52,7 @@ static void ata_delay(ata_device_t *dev) {
     __inb(dev->ctl_register);
     __inb(dev->ctl_register);
     __inb(dev->ctl_register);
-    inb(dev->ctl_register);
+    __inb(dev->ctl_register);
 }
 
 static void ata_software_reset(ata_device_t *dev) {
