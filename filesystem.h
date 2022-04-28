@@ -33,16 +33,15 @@
 
 #define MAX_FILENAME 8
 #define MAX_FILETYPE 3
-#define MAXBLOCKS 1024
-#define BLOCKSIZE 1024
+#define SECTOR_SIZE 512
 
 // Possible values for file attributes
 #define DIR_ENTRY_READ_ONLY 0x01
-#define DIR_ENTRY_HIDDEN 0x02
-#define DIR_ENTRY_SYSTEM 0x04
+#define DIR_ENTRY_HIDDEN    0x02
+#define DIR_ENTRY_SYSTEM    0x04
 #define DIR_ENTRY_VOLUME_ID 0x08
 #define DIR_ENTRY_DIRECTORY 0x10
-#define DIR_ENTRY_ARCHIVE 0x20
+#define DIR_ENTRY_ARCHIVE   0x20
 
 /*
 ** Types
@@ -80,8 +79,8 @@ typedef struct bios_param_block{
     uint8_t windows_flags; //Only used for flags in Windows NT, reserved otherwise
     uint8_t signature;
     uint32_t volume_id;
-    char volume_label[12];
-    char system_id[9];
+    char volume_label[11];
+    char system_id[8];
 } bpb_t;
 
 /*
@@ -92,10 +91,9 @@ typedef struct bios_param_block{
 typedef struct FAT32_struct {
     bpb_t bios_block;
     uint32_t *FAT;
-    uint32_t partition_begin_sector;
+    uint32_t data_begin_sector;
     uint32_t FAT_begin_sector;
-    uint32_t cluster_begin_sector;
-    uint32_t cluster_size;
+    uint32_t full_cluster_size;
     uint32_t current_cluster_pos;
 } f32_t;
 
@@ -142,13 +140,13 @@ f32_t *make_Filesystem();
 
 void end_Filesystem(f32_t *filesystem);
 
-dir_entry_t *create_file(char* new_name, char* type, uint32_t size);
+dir_entry_t *create_file(char* new_name, char* type, uint32_t size, uint32_t cluster_num);
 
 //void file_open(dir_entry_t* this_file, char* mode);
 
 //void file_close(dir_entry_t* this_file);
 
-void file_read(f32_t *filesystem, dir_entry_t* this_file, uint32_t cluster);
+uint32_t *dir_read(f32_t *filesystem, dir_entry_t* this_file, uint32_t cluster);
 
 void file_write(f32_t *filesystem, dir_entry_t* this_file, directory_t *this_dir);
 

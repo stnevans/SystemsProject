@@ -37,6 +37,12 @@ uint32_t FAT_FREE_CLUSTER = 0x00000000;
 uint32_t FAT_EOC = 0x0FFFFFF8;
 uint32_t FAT_BAD_CLUSTER = 0x0FFFFFF7;
 
+// ATA Master and Slave drives
+static ata_device_t ata_primary_master = {.io_register = 0x1F0, .ctl_register = 0x3F6, .slavebit = 0};
+static ata_device_t ata_primary_slave = {.io_register = 0x1F0, .ctl_register = 0x3F6, .slavebit = 1};
+static ata_device_t ata_secondary_master = {.io_register = 0x170, .ctl_register = 0x376, .slavebit = 0};
+static ata_device_t ata_secondary_slave = {.io_register = 0x170, .ctl_register = 0x376, .slavebit = 1};
+ata_device_t dev;
 
 /*
 ** PRIVATE FUNCTIONS
@@ -61,8 +67,7 @@ uint32_t FAT_BAD_CLUSTER = 0x0FFFFFF7;
 */
 void read_bpb(f32_t *filesystem, bpb_t *bios_block){
     // Finds and reads the sector where the Boot Record is from disk
-    uint8_t sector0[512];
-    ata_device_t dev = {.io_register = 0x1F0, .ctl_register = 0x3F6, .slavebit = 0};
+    uint8_t sector0[SECTOR_SIZE];
     read_sectors_ATA_PIO(0, sector0, &dev);
 
     // BIOS Parameter Block
@@ -107,27 +112,36 @@ f32_t *make_Filesystem(){
     f32_t *filesystem;
     __memclr(filesystem, sizeof(f32_t));
 
+    // Figure out what ATA drive to use
+    if (ata_detect_device(&ata_primary_master) == ATA_DEV_ATAPI) {
+        dev = ata_primary_master;
+    } else if (ata_detect_device(&ata_primary_slave) == ATA_DEV_ATAPI) {
+        dev = ata_primary_slave;
+    } else if (ata_detect_device(&ata_secondary_master) == ATA_DEV_ATAPI) {
+        dev = ata_secondary_master;
+    } else if (ata_detect_device(&ata_secondary_slave) == ATA_DEV_ATAPI) {
+        dev = ata_secondary_master;
+    }
+
     // Get information about BPB
     read_bpb(filesystem, &filesystem->bios_block);
 
     // Finds various information about where sectors begin and how large clusters are
-    filesystem->partition_begin_sector = 0;
-    filesystem->FAT_begin_sector = filesystem->partition_begin_sector + filesystem->bios_block.reserved_sectors;
-    filesystem->cluster_begin_sector = filesystem->FAT_begin_sector + (filesystem->bios_block.num_FAT * filesystem->bios_block.sectors_per_FAT32);
-    filesystem->cluster_size = 512 * filesystem->bios_block.sectors_per_cluster;
+    filesystem->FAT_begin_sector = filesystem->bios_block.reserved_sectors;
+    filesystem->data_begin_sector = filesystem->bios_block.reserved_sectors + (filesystem->bios_block.num_FAT * filesystem->bios_block.sectors_per_FAT32);
+    filesystem->full_cluster_size = SECTOR_SIZE * filesystem->bios_block.sectors_per_cluster;
     filesystem->current_cluster_pos = 0;
 
     // Set up the File Allocation Table
-    uint32_t FAT_size = 512 * filesystem->bios_block.sectors_per_FAT32;
+    uint32_t FAT_size = SECTOR_SIZE * filesystem->bios_block.sectors_per_FAT32;
     __memclr(filesystem->FAT, FAT_size);
     
     // Set up sectors
     for(uint32_t sector_count = 0; sector_count < filesystem->bios_block.sectors_per_FAT32; sector_count++){
-        uint32_t this_sector[512];
-        ata_device_t dev = {.io_register = 0x1F0, .ctl_register = 0x3F6, .slavebit = 0};
+        uint32_t this_sector[SECTOR_SIZE];
         read_sectors_ATA_PIO(filesystem->FAT_begin_sector + sector_count, this_sector, &dev);
-        for (int i = 0; i < 512/4; i++){
-            filesystem->FAT[sector_count * (512/4) + i] = this_sector[i * 4];
+        for (int i = 0; i < SECTOR_SIZE/4; i++){
+            filesystem->FAT[sector_count * (SECTOR_SIZE/4) + i] = this_sector[i * 4];
         }
 
     }
@@ -161,7 +175,7 @@ void end_Filesystem(f32_t *filesystem){
 **
 ** @return The new file (dir_entry_t)
 */
-dir_entry_t *create_file(char* new_name, char* type, uint8_t attribute, uint32_t size){
+dir_entry_t *create_file(char* new_name, char* type, uint8_t attribute, uint32_t size, uint32_t cluster_num){
     // Checks if file name and file type match 8.3 standard
     if(strlen(new_name) > MAX_FILENAME){
         return -1;
@@ -177,14 +191,16 @@ dir_entry_t *create_file(char* new_name, char* type, uint8_t attribute, uint32_t
     __strcpy(new_file->extension, type);
     new_file->attributes = attribute;
     new_file->file_size = size;
+    new_file->first_cluster_high_bytes = cluster_num >> 16;
+    new_file->first_cluster_low_bytes = cluster_num & 0xFFFF;
 
     return new_file;
 }
 
 /**
-** Name:  file_read
+** Name:  dir_read
 **
-** This function finds a file and reads it using a given cluster
+** This function finds a directory and reads it using a given cluster
 **
 ** @param filesystem the FAT32 filesystem
 ** @param new_file   the file being looked for
@@ -192,28 +208,43 @@ dir_entry_t *create_file(char* new_name, char* type, uint8_t attribute, uint32_t
 **
 ** @return None
 */
-void file_read(f32_t *filesystem, dir_entry_t *new_file, uint32_t cluster){
+uint32_t *dir_read(f32_t *filesystem, dir_entry_t *new_file, uint32_t cluster){
     // Calculates information about where the file is and the sectors for the cluster
     uint32_t root_cluster = filesystem->bios_block.root_dir_cluster_num;
-    uint32_t first_sector_of_cluster = ((cluster - 2) * filesystem->bios_block.sectors_per_cluster) + filesystem->partition_begin_sector;
+    uint32_t first_sector_of_cluster = ((cluster - 2) * filesystem->bios_block.sectors_per_cluster) + filesystem->data_begin_sector;
     uint32_t current_cluster = cluster;
     uint32_t current_cluster_sector = first_sector_of_cluster;
-    uint32_t current_byte = __inb(first_sector_of_cluster);
-    
-    // Looks through the cluster chain for the entire file
-    while(filesystem->FAT[current_cluster] != FAT_EOC){
-        while(current_byte != 0){
-            // Read current entry
+    // Prepares the storage of the data of the entry
+    uint32_t *entry;
+    __memclr(entry, new_file->file_size);
+    uint32_t *entry_ptr = entry;
+    uint32_t entry_buffer[32];
+    // Gets the first byte of the entry
+    uint32_t first_byte = current_cluster_sector & 0xFF;
 
-            current_byte = __inb(current_cluster_sector);
+    // Looks through the cluster chain for the entire file
+    while(current_cluster != FAT_EOC){
+        // If the first byte is 0 then there are no more entries in this cluster
+        while(first_byte != 0){
+            // If the first byte is 0xE5 then the entry is unused and we move onto the next entry
+            if (first_byte != 0xE5){
+                // Read current entry
+                read_sectors_ATA_PIO(current_cluster_sector, entry_buffer, &dev);
+                // Copies it into the entry and updates the pointer
+                __memcpy(entry_ptr, entry_buffer, sizeof(entry_buffer));
+                entry_ptr += 32;
+            }
+            // Updates the first byte
+            first_byte += 32;
         }
         
         // Iterates through cluster chain
         current_cluster = filesystem->FAT[current_cluster];
-        current_cluster_sector = ((current_cluster - 2) * filesystem->bios_block.sectors_per_cluster) + filesystem->partition_begin_sector;
-        current_byte = __inb(current_cluster_sector);
+        current_cluster_sector = ((current_cluster - 2) * filesystem->bios_block.sectors_per_cluster) + filesystem->data_begin_sector;
+        first_byte = current_cluster_sector & 0xFF;
     }
     
+    return entry;
 }
 
 /**
@@ -231,7 +262,7 @@ void file_read(f32_t *filesystem, dir_entry_t *new_file, uint32_t cluster){
 void file_write(f32_t *filesystem, dir_entry_t *new_file, directory_t *this_dir){
     // Finds first free entry in directory
     int empty_entry;
-    for(empty_entry = 0; empty_entry < filesystem->cluster_size; empty_entry+=sizeof(dir_entry_t)){
+    for(empty_entry = 0; empty_entry < SECTOR_SIZE; empty_entry+=sizeof(dir_entry_t)){
         if((&this_dir->entries[empty_entry] == 0)){
             break;
         }    
@@ -243,7 +274,7 @@ void file_write(f32_t *filesystem, dir_entry_t *new_file, directory_t *this_dir)
     
     // Adds file to FAT
     filesystem->FAT[filesystem->current_cluster_pos] = FAT_EOC;
-    filesystem->current_cluster_pos += filesystem->cluster_size;
+    filesystem->current_cluster_pos += 32;
 
     // Writes cluster's address into directory entry
     new_file->first_cluster_low_bytes = filesystem->current_cluster_pos;
@@ -268,7 +299,7 @@ void file_write(f32_t *filesystem, dir_entry_t *new_file, directory_t *this_dir)
 void delete_file(f32_t *filesystem, dir_entry_t *del_file, directory_t *this_dir){
     // Finds file in directory and remove it
     int entry_position;
-    for(entry_position = 0; entry_position < filesystem->cluster_size; entry_position+=sizeof(dir_entry_t)){
+    for(entry_position = 0; entry_position < SECTOR_SIZE; entry_position+=sizeof(dir_entry_t)){
         if((&this_dir->entries[entry_position] == 0)){
             break;
         }    
@@ -295,7 +326,7 @@ void delete_file(f32_t *filesystem, dir_entry_t *del_file, directory_t *this_dir
 directory_t *create_dir(f32_t *filesystem, uint32_t cluster){
     directory_t *new_dir;
     new_dir->cluster_num = cluster;
-    __memclr(new_dir->entries, filesystem->cluster_size);
+    __memclr(new_dir->entries, SECTOR_SIZE);
     new_dir->num_entries = 0;
 
     return new_dir;
