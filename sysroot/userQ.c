@@ -13,7 +13,7 @@
 **   where x is the ID character
 */
 
-int32_t userQ( int argc, char *argv[] ) {
+int32_t main( int argc, char *argv[] ) {
     char ch = 'q';    // default character to print
     char buf[128];
 

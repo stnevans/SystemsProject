@@ -49,7 +49,7 @@ int32_t main( int argc, char *argv[] ) {
     ARGS4( userW, "userW", "W", "10", "5", NULL );
 
     for( int i = 0; i < count; ++i ) {
-        pid_t whom = spawn( userW, argv_userW );
+        pid_t whom = spawn( BIN_USERW, argv_userW );
         if( whom < 0 ) {
             swrites( ch2 );
         } else {

@@ -284,6 +284,12 @@ static void _sys_execp( pcb_t *curr ) {
 
     uint32_t elf_entry = elf_load_program(entry);
 
+    if (!elf_entry) {
+        __sprint( b256, "*** execp(): could not load binary at address: %x\n",
+                entry );
+        PANIC( 0, b256 );
+    }
+
     // Set up the new stack for the user.
     context_t *ct = _stk_setup( curr->stack, elf_entry, args );
     assert( ct != NULL );

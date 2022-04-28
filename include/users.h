@@ -112,13 +112,34 @@
 // called exit() but continued to run), it will usually return a status
 // of 42.
 //
-// #define SPAWN_A
-// #define SPAWN_B
-// #define SPAWN_C
-// #define SPAWN_D
-// #define SPAWN_E
-// #define SPAWN_F
-// #define SPAWN_G
+
+#define BIN_IDLE  0x20000
+#define BIN_MAIN1 0x24000
+#define BIN_MAIN2 0x28000
+#define BIN_MAIN3 0x2C000
+#define BIN_MAIN4 0x30000
+#define BIN_MAIN5 0x34000
+#define BIN_MAIN6 0x38000
+#define BIN_USERH 0x3C000
+#define BIN_USERI 0x40000
+#define BIN_USERJ 0x44000
+#define BIN_USERP 0x48000
+#define BIN_USERQ 0x4C000
+#define BIN_USERR 0x50000
+#define BIN_USERS 0x54000
+#define BIN_USERV 0x58000
+#define BIN_USERW 0x5C000
+#define BIN_USERX 0x60000
+#define BIN_USERY 0x64000
+#define BIN_USERZ 0x68000
+
+#define SPAWN_A
+#define SPAWN_B
+#define SPAWN_C
+#define SPAWN_D
+#define SPAWN_E
+#define SPAWN_F
+#define SPAWN_G
 // #define SPAWN_H
 // #define SPAWN_I
 // #define SPAWN_J
@@ -126,7 +147,7 @@
 // #define SPAWN_L
 // #define SPAWN_M
 // #define SPAWN_N
-// // no user O
+// no user O
 // #define SPAWN_P
 // #define SPAWN_Q
 // #define SPAWN_R
@@ -152,15 +173,6 @@
 ** Invoked as:  init
 */
 int32_t init( int argc, char *argv[] );
-
-/**
-** idle - the idle process
-**
-** Reports itself, then loops forever delaying and printing a character.
-**
-** Invoked as:  idle
-*/
-int32_t idle( int argc, char *argv[] );
 
 #endif
 /* SP_ASM_SRC */

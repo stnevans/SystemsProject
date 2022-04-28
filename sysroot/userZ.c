@@ -19,7 +19,7 @@
 **         n is the iteration count (defaults to 10)
 */
 
-int32_t userZ( int argc, char *argv[] ) {
+int32_t main( int argc, char *argv[] ) {
     int count = 10;   // default iteration count
     char ch = 'z';    // default character to print
     char buf[128], buf2[128];

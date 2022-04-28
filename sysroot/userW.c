@@ -16,7 +16,7 @@
 **         t is the sleep time (defaults to 3 seconds)
 */
 
-int32_t userW( int argc, char *argv[] ) {
+int32_t main( int argc, char *argv[] ) {
     int count = 20;   // default iteration count
     char ch = 'w';    // default character to print
     int nap = 3;      // nap length

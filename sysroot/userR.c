@@ -14,7 +14,7 @@
 **         s is the initial delay time (defaults to 10)
 */
 
-int32_t userR( int argc, char *argv[] ) {
+int32_t main( int argc, char *argv[] ) {
     char ch = 'r';    // default character to print
     int delay = 10;   // initial delay
     char buf[128];

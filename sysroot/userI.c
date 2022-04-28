@@ -19,7 +19,7 @@
 **         n is the number of children to spawn (defaults to 5)
 */
 
-int32_t userI( int argc, char *argv[] ) {
+int32_t main( int argc, char *argv[] ) {
     int count = 5;    // default child count
     char ch = 'i';    // default character to print
     int nap = 5;      // nap time
@@ -48,7 +48,7 @@ int32_t userI( int argc, char *argv[] ) {
     ARGS4( userW, "userW", "W", "10", "5", NULL );
 
     for( int i = 0; i < count; ++i ) {
-        pid_t whom = spawn( userW, argv_userW );
+        pid_t whom = spawn( BIN_USERW, argv_userW );
         if( whom < 0 ) {
             swrites( ch2 );
         } else {

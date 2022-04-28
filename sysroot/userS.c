@@ -14,7 +14,7 @@
 **         s is the sleep time (defaults to 20)
 */
 
-int32_t userS( int argc, char *argv[] ) {
+int32_t main( int argc, char *argv[] ) {
     char ch = 's';    // default character to print
     int nap = 20;     // nap time
     char buf[128];

@@ -15,7 +15,7 @@
 **         n is the iteration count (defaults to 10)
 */
 
-int32_t userY( int argc, char *argv[] ) {
+int32_t main( int argc, char *argv[] ) {
     int count = 10;   // default iteration count
     char ch = 'Y';    // default character to print
     char ch2;         // secondary character

@@ -15,7 +15,7 @@
 **         n is a value to be used when printing our character
 */
 
-int32_t userX( int argc, char *argv[] ) {
+int32_t main( int argc, char *argv[] ) {
     int count = 20;   // iteration count
     char ch = 'x';    // default character to print
     int status;

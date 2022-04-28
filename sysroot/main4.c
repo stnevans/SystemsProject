@@ -42,7 +42,7 @@ int32_t main( int argc, char *argv[] ) {
     for( int i = 0; i < count ; ++i ) {
         write( CHAN_SIO, &ch, 1 );
         sprint( buf, "%d", me + i );
-        int whom = spawn( userX, argv_userX );
+        int whom = spawn( BIN_USERX, argv_userX );
         if( whom < 0 ) {
             swrites( msg2 );
         } else {

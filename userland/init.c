@@ -68,7 +68,7 @@ int32_t init( int argc, char *argv[] ) {
         cwrites( "init, fork() for idle failed\n" );
     } else {
         if( whom == 0 ) {
-            execp( 0x20000, Deferred, argv_idle );
+            execp( BIN_IDLE, Deferred, argv_idle );
             cwrites( "init, execp() for idle failed\n" );
             exit( FAILURE );
         } else {
@@ -90,7 +90,7 @@ int32_t init( int argc, char *argv[] ) {
     // set up for users A, B, and C initially
 #ifdef SPAWN_A
     ARGS2( userA, "main1", "A", "30" );
-    whom = spawn( main1, argv_userA );
+    whom = spawn( BIN_MAIN1, argv_userA );
     if( whom < 0 ) {
         cwrites( "init, spawn() user A failed\n" );
     }
@@ -100,7 +100,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_B
     ARGS2( userB, "main1", "B", "30" );
-    whom = spawn( main1, argv_userB );
+    whom = spawn( BIN_MAIN1, argv_userB );
     if( whom < 0 ) {
         cwrites( "init, spawn() user B failed\n" );
     }
@@ -110,7 +110,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_C
     ARGS2( userC, "main1", "C", "30" );
-    whom = spawn( main1, argv_userC );
+    whom = spawn( BIN_MAIN1, argv_userC );
     if( whom < 0 ) {
         cwrites( "init, spawn() user C failed\n" );
     }
@@ -122,7 +122,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_D
     ARGS2( userD, "main2", "D", "20" );
-    whom = spawn( main2, argv_userD );
+    whom = spawn( BIN_MAIN2, argv_userD );
     if( whom < 0 ) {
         cwrites( "init, spawn() user D failed\n" );
     }
@@ -132,7 +132,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_E
     ARGS2( userE, "main2", "E", "20" );
-    whom = spawn( main2, argv_userE );
+    whom = spawn( BIN_MAIN2, argv_userE );
     if( whom < 0 ) {
         cwrites( "init, spawn() user E failed\n" );
     }
@@ -145,7 +145,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_F
     ARGS2( userF, "main3", "F", "20" );
-    whom = spawn( main3, argv_userF );
+    whom = spawn( BIN_MAIN3, argv_userF );
     if( whom < 0 ) {
         cwrites( "init, spawn() user F failed\n" );
     }
@@ -155,7 +155,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_G
     ARGS2( userG, "main3", "G", "10" );
-    whom = spawn( main3, argv_userG );
+    whom = spawn( BIN_MAIN3, argv_userG );
     if( whom < 0 ) {
         cwrites( "init, spawn() user G failed\n" );
     }
@@ -167,7 +167,7 @@ int32_t init( int argc, char *argv[] ) {
     
 #ifdef SPAWN_H
     ARGS2( userH, "userH", "H", "4" );
-    whom = spawn( userH, argv_userH );
+    whom = spawn( BIN_USERH, argv_userH );
     if( whom < 0 ) {
         cwrites( "init, spawn() user H failed\n" );
     }
@@ -179,7 +179,7 @@ int32_t init( int argc, char *argv[] ) {
     
 #ifdef SPAWN_I
     ARGS1( userI, "userI", "I" );
-    whom = spawn( userI, argv_userI );
+    whom = spawn( BIN_USERI, argv_userI );
     if( whom < 0 ) {
         cwrites( "init, spawn() user I failed\n" );
     }
@@ -191,7 +191,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_J
     ARGS1( userJ, "userJ", "J" );
-    whom = spawn( userJ, argv_userJ );
+    whom = spawn( BIN_USERJ, argv_userJ );
     if( whom < 0 ) {
         cwrites( "init, spawn() user J failed\n" );
     }
@@ -204,7 +204,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_K
     ARGS2( userK, "main4", "K", "8" );
-    whom = spawn( main4, argv_userK );
+    whom = spawn( BIN_MAIN4, argv_userK );
     if( whom < 0 ) {
         cwrites( "init, spawn() user K failed\n" );
     }
@@ -214,7 +214,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_L
     ARGS2( userL, "main4", "L", "5" );
-    whom = spawn( main4, argv_userL );
+    whom = spawn( BIN_MAIN4, argv_userL );
     if( whom < 0 ) {
         cwrites( "init, spawn() user L failed\n" );
     }
@@ -226,7 +226,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_M
     ARGS3( userM, "main5", "M", "f", "5" );
-    whom = spawn( main5, argv_userM );
+    whom = spawn( BIN_MAIN5, argv_userM );
     if( whom < 0 ) {
         cwrites( "init, spawn() user M failed\n" );
     }
@@ -236,7 +236,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_N
     ARGS3( userN, "main5", "N", "t", "5" );
-    whom = spawn( main5, argv_userN );
+    whom = spawn( BIN_MAIN5, argv_userN );
     if( whom < 0 ) {
         cwrites( "init, spawn() user N failed\n" );
     }
@@ -250,7 +250,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_P
     ARGS3( userP, "userP", "P", "3", "2" );
-    whom = spawn( userP, argv_userP );
+    whom = spawn( BIN_USERP, argv_userP );
     if( whom < 0 ) {
         cwrites( "init, spawn() user P failed\n" );
     }
@@ -262,7 +262,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_Q
     ARGS1( userQ, "userQ", "Q" );
-    whom = spawn( userQ, argv_userQ );
+    whom = spawn( BIN_USERQ, argv_userQ );
     if( whom < 0 ) {
         cwrites( "init, spawn() user Q failed\n" );
     }
@@ -274,7 +274,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_R
     ARGS2( userR, "userR", "R", "10" );
-    whom = spawn( userR, argv_userR );
+    whom = spawn( BIN_USERR, argv_userR );
     if( whom < 0 ) {
         cwrites( "init, spawn() user R failed\n" );
     }
@@ -286,7 +286,7 @@ int32_t init( int argc, char *argv[] ) {
 
 #ifdef SPAWN_S
     ARGS2( userS, "userS", "S", "20" );
-    whom = spawn( userS, argv_userS );
+    whom = spawn( BIN_USERS, argv_userS );
     if( whom < 0 ) {
         cwrites( "init, spawn() user S failed\n" );
     }
@@ -301,7 +301,7 @@ int32_t init( int argc, char *argv[] ) {
     // User T:  wait for any child each time
     // "main6 T 1 << 8 + 6"
     ARGS3( userT, "main6", "T", "w", "6" );
-    whom = spawn( main6, argv_userT );
+    whom = spawn( BIN_MAIN6, argv_userT );
     if( whom < 0 ) {
         cwrites( "init, spawn() user T failed\n" );
     }
@@ -312,7 +312,7 @@ int32_t init( int argc, char *argv[] ) {
 #ifdef SPAWN_U
     // User U:  kill all children
     ARGS3( userU, "main6", "U", "k", "6" );
-    whom = spawn( main6, argv_userU );
+    whom = spawn( BIN_MAIN6, argv_userU );
     if( whom < 0 ) {
         cwrites( "init, spawn() user U failed\n" );
     }
@@ -325,7 +325,7 @@ int32_t init( int argc, char *argv[] ) {
 #ifdef SPAWN_V
     // User V:  get and print the time
     ARGS3( userV, "userV", "V", "10", "5" );
-    whom = spawn( userV, argv_userV );
+    whom = spawn( BIN_USERV, argv_userV );
     if( whom < 0 ) {
         cwrites( "init, spawn() user V failed\n" );
     }

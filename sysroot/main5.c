@@ -44,12 +44,12 @@ int32_t main( int argc, char *argv[] ) {
 
     for( int i = 0; i < count; ++i ) {
         write( CHAN_SIO, &ch, 1 );
-        pid_t whom = spawn( userW, argv_userW );
+        pid_t whom = spawn( BIN_USERW, argv_userW );
         if( whom < 1 ) {
             swrites( msg2 );
         }
         if( alsoZ ) {
-            whom = spawn( userZ, argv_userZ );
+            whom = spawn( BIN_USERZ, argv_userZ );
             if( whom < 1 ) {
                 swrites( msg2 );
             }

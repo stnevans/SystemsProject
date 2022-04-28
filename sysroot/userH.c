@@ -14,7 +14,7 @@
 **         n is the number of children to spawn
 */
 
-int32_t userH( int argc, char *argv[] ) {
+int32_t main( int argc, char *argv[] ) {
     int32_t ret = 0;  // return value
     int count = 5;    // child count
     char ch = 'H';    // default character to print
@@ -40,7 +40,7 @@ int32_t userH( int argc, char *argv[] ) {
     for( int i = 0; i < count; ++i ) {
 
         // spawn a child
-        whom = spawn( userZ, argv_userZ );
+        whom = spawn( BIN_USERZ, argv_userZ );
 
         // our exit status is the number of failed spawn() calls
         if( whom < 0 ) {

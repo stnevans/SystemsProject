@@ -59,9 +59,11 @@ static int elf_verify(Elf32_Ehdr *hdr) {
 
 uint32_t elf_load_program(uint32_t addr) {
     Elf32_Ehdr *hdr = (Elf32_Ehdr*) addr;
+    char buf[128];
 
     if (!elf_verify(hdr)) {
-        cwrites( "ELF: invalid ELF header!\n" );
+        sprint("ELF: invalid ELF header at %x!\n", addr);
+        cwrites(buf);
         return 0;
     }
 

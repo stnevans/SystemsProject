@@ -14,7 +14,7 @@
 **         n is the number of children to spawn (defaults to 2 * N_PROCS)
 */
 
-int32_t userJ( int argc, char *argv[] ) {
+int32_t main( int argc, char *argv[] ) {
     int count = 2 * N_PROCS;   // number of children to spawn
     char ch = 'J';             // default character to print
 
@@ -35,7 +35,7 @@ int32_t userJ( int argc, char *argv[] ) {
     ARGS3( userY, "userY", "Y", "10", NULL );
 
     for( int i = 0; i < count ; ++i ) {
-        int32_t whom = spawn( userY, argv_userY );
+        int32_t whom = spawn( BIN_USERY, argv_userY );
         if( whom < 0 ) {
             write( CHAN_SIO, "!j!", 3 );
         } else {
