@@ -113,26 +113,26 @@
 // of 42.
 //
 
-#define BIN_IDLE  0x22000
-#define BIN_MAIN1 0x26000
-#define BIN_MAIN2 0x2A000
-#define BIN_MAIN3 0x2E000
-#define BIN_MAIN4 0x32000
-#define BIN_MAIN5 0x36000
-#define BIN_MAIN6 0x3A000
+#define BIN_IDLE  0x23000
+#define BIN_MAIN1 0x27000
+#define BIN_MAIN2 0x2b000
+#define BIN_MAIN3 0x2f000
+#define BIN_MAIN4 0x33000
+#define BIN_MAIN5 0x37000
+#define BIN_MAIN6 0x3b000
 
-#define BIN_USERH 0x3C000
-#define BIN_USERI 0x40000
-#define BIN_USERJ 0x44000
-#define BIN_USERP 0x48000
-#define BIN_USERQ 0x4C000
-#define BIN_USERR 0x50000
-#define BIN_USERS 0x54000
-#define BIN_USERV 0x58000
-#define BIN_USERW 0x5C000
-#define BIN_USERX 0x60000
-#define BIN_USERY 0x64000
-#define BIN_USERZ 0x68000
+#define BIN_USERH 0x3f000
+#define BIN_USERI 0x43000
+#define BIN_USERJ 0x47000
+#define BIN_USERP 0x4b000
+#define BIN_USERQ 0x4f000
+#define BIN_USERR 0x53000
+#define BIN_USERS 0x57000
+#define BIN_USERV 0x5b000
+#define BIN_USERW 0x5f000
+#define BIN_USERX 0x63000
+#define BIN_USERY 0x67000
+#define BIN_USERZ 0x6b000
 
 #define SPAWN_A
 #define SPAWN_B
