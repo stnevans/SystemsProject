@@ -307,7 +307,8 @@ void _km_init( void ) {
     */
 
     // set our cutoff point as the end of the BSS section
-    cutoff = (uint32_t) (&_end + 0x10000);
+    // cutoff = (uint32_t) (&_end + 0x10000);
+    cutoff = (uint32_t) (0x3E000);
 
     // round it up to the next multiple of 4K (0x1000)
     if( cutoff & 0xfffLL ) {
@@ -403,6 +404,8 @@ void _km_init( void ) {
 
         uint32_t b32 = base   & ADDR_LOW_HALF;
         uint32_t l32 = length & ADDR_LOW_HALF;
+
+        __cio_printf("PHYS MEM: %x %x\n", b32, l32);
         
         _add_block( b32, l32 );
     }

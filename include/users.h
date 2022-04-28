@@ -113,13 +113,14 @@
 // of 42.
 //
 
-#define BIN_IDLE  0x20000
-#define BIN_MAIN1 0x24000
-#define BIN_MAIN2 0x28000
-#define BIN_MAIN3 0x2C000
-#define BIN_MAIN4 0x30000
-#define BIN_MAIN5 0x34000
-#define BIN_MAIN6 0x38000
+#define BIN_IDLE  0x22000
+#define BIN_MAIN1 0x26000
+#define BIN_MAIN2 0x2A000
+#define BIN_MAIN3 0x2E000
+#define BIN_MAIN4 0x32000
+#define BIN_MAIN5 0x36000
+#define BIN_MAIN6 0x3A000
+
 #define BIN_USERH 0x3C000
 #define BIN_USERI 0x40000
 #define BIN_USERJ 0x44000
