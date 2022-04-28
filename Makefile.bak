@@ -100,7 +100,7 @@ HEADERS = $(BOOT_HDRS) $(FMK_HDRS) $(OS_HDRS) $(USR_HDRS)
 #
 
 GEN_OPTIONS = -DCLEAR_BSS -DGET_MMAP -DSP_OS_CONFIG
-DBG_OPTIONS = -DTRACE_CX -DSTATUS=5
+DBG_OPTIONS = -DTRACE_CX -DSTATUS=3
 
 USER_OPTIONS = $(GEN_OPTIONS) $(DBG_OPTIONS)
 
@@ -169,7 +169,8 @@ LDFLAGS = -melf_i386 -no-pie
 
 .s.b:
 	$(AS) $(ASFLAGS) -o $*.o $*.s -a=$*.lst
-	$(LD) $(LDFLAGS) -Ttext 0x0 -s --oformat binary -e begtext -o $*.b $*.o
+	$(LD) $(LDFLAGS) -Ttext 0x0 -s -e begtext -o $*.b $*.o
+	objcopy --remove-section=.note.gnu.property -O binary $*.b
 
 .c.o:
 	$(CC) $(CFLAGS) -c $*.c
@@ -193,7 +194,7 @@ prog.o:	$(OBJECTS)
 	$(LD) $(LDFLAGS) -o prog.o -Ttext 0x10000 $(OBJECTS) $(A_LIBS)
 
 prog.b:	prog.o
-	$(LD) $(LDFLAGS) -o prog.b -s --oformat binary -Ttext 0x10000 prog.o
+	objcopy --remove-section=.note.gnu.property -O binary prog.o prog.b
 
 #
 # Targets for copying bootable image onto boot devices
@@ -216,7 +217,7 @@ BuildImage:	BuildImage.c
 	$(CC) -o BuildImage BuildImage.c
 
 Offsets:	Offsets.c process.h stacks.h queues.h common.h
-	$(CC) -mx32 -std=c99 $(INCLUDES) -o Offsets Offsets.c
+	$(CC) -m32 -std=c99 $(INCLUDES) -o Offsets Offsets.c
 
 offsets.h:	Offsets
 	./Offsets -h
@@ -260,7 +261,7 @@ depend:
 
 bootstrap.o: bootstrap.h
 startup.o: bootstrap.h
-isr_stubs.o: bootstrap.h offsets.h
+isr_stubs.o: bootstrap.h
 cio.o: cio.h lib.h common.h kdefs.h kmem.h compat.h support.h kernel.h
 cio.o: x86arch.h process.h stacks.h queues.h x86pic.h
 support.o: support.h lib.h common.h kdefs.h cio.h kmem.h compat.h kernel.h
@@ -290,8 +291,12 @@ syscalls.o: common.h kdefs.h cio.h kmem.h compat.h support.h kernel.h
 syscalls.o: x86arch.h process.h stacks.h queues.h lib.h x86pic.h ./uart.h
 syscalls.o: bootstrap.h syscalls.h scheduler.h clock.h sio.h
 users.o: common.h kdefs.h cio.h kmem.h compat.h support.h kernel.h x86arch.h
-users.o: process.h stacks.h queues.h lib.h users.h userland/main3.c ulib.h
-users.o: userland/userS.c userland/init.c userland/idle.c
+users.o: process.h stacks.h queues.h lib.h users.h userland/main1.c ulib.h
+users.o: userland/main2.c userland/main3.c userland/userH.c userland/userZ.c
+users.o: userland/userI.c userland/userW.c userland/userJ.c userland/userY.c
+users.o: userland/main4.c userland/userX.c userland/main5.c userland/userP.c
+users.o: userland/userQ.c userland/userR.c userland/userS.c userland/main6.c
+users.o: userland/userV.c userland/init.c userland/idle.c
 ulibc.o: common.h kdefs.h cio.h kmem.h compat.h support.h kernel.h x86arch.h
 ulibc.o: process.h stacks.h queues.h lib.h
 ulibs.o: syscalls.h common.h kdefs.h cio.h kmem.h compat.h support.h kernel.h
