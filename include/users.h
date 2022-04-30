@@ -134,13 +134,14 @@
 #define BIN_USERY 0x67000
 #define BIN_USERZ 0x6b000
 
-// #define SPAWN_A
-// #define SPAWN_B
-// #define SPAWN_C
-// #define SPAWN_D
-// #define SPAWN_E
-// #define SPAWN_F
-// #define SPAWN_G
+#define SPAWN_A
+#define SPAWN_B
+#define SPAWN_C
+#define SPAWN_D
+#define SPAWN_E
+#define SPAWN_F
+#define SPAWN_G
+// 
 // #define SPAWN_H
 // #define SPAWN_I
 // #define SPAWN_J

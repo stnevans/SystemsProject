@@ -311,7 +311,7 @@ void _km_init( void ) {
 
     // set our cutoff point as the end of the BSS section
     // cutoff = (uint32_t) (&_end + 0x10000);
-    cutoff = (uint32_t) (0x3E000);
+    cutoff = (uint32_t) (0x3f000);
 
     // round it up to the next multiple of 4K (0x1000)
     if( cutoff & 0xfffLL ) {
