@@ -22,15 +22,16 @@ phys_addr alloc_frame(){
 
     if(km_is_init()){
         //Should never happen. Also we can actually make this work by just id mapping the page returned.
-        PANIC(0, "Not enough paging mem TODO");
-        return (phys_addr) _km_page_alloc(1);
+        // PANIC(0, "Not enough paging mem. This could be fixed, but we haven't run into it yet");
+        phys_addr addr = (phys_addr) _km_page_alloc(1);
+        map_virt_page_to_phys(addr, addr);
+        return addr;
     }
     
     return 0;
 }
 
 void free_frame(phys_addr addr) {
-    
     for(int i = 0; i< num_frames; i++){
         if(&frames[i] == (void *) addr){
             is_alloced[i] = false;

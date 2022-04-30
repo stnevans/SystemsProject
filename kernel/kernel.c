@@ -151,7 +151,6 @@ void _kinit( void ) {
     __cio_puts( "-------------------------------\n" );
 
     __cio_puts( "Modules:" );
-    __delay( 100 );  // about 2.5 seconds
 
     // call the module initialization functions, being
     // careful to follow any module precedence requirements
@@ -159,7 +158,6 @@ void _kinit( void ) {
     // classic order:  kmem; queue; everything else
 
     _km_init();     // MUST BE FIRST. Initializes the memory AND paging
-    __delay( 100 );  // about 2.5 seconds
 
     // other module initialization calls here
     _queue_init();  // MUST BE SECOND

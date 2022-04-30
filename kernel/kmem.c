@@ -190,7 +190,7 @@ static void _add_block( uint32_t base, uint32_t length) {
 
 
     if(!is_paging_init()){
-        uint8_t num_pages=0x40;
+        uint8_t num_pages=10;
         if(length >= num_pages * SZ_PAGE){
             _phys_alloc_init(base, length/SZ_PAGE);
             _paging_init();
@@ -225,7 +225,6 @@ static void _add_block( uint32_t base, uint32_t length) {
     // let's identity map this block for now
     map_virt_page_to_phys(virt,base);
 
-    __cio_puts("Writing block");
     // block = base +
     block = (Blockinfo *) virt;
 
@@ -260,7 +259,6 @@ static void _add_block( uint32_t base, uint32_t length) {
         map_virt_page_to_phys(curr,curr);
         curr = curr->next;
     }
-    __cio_printf("AB\n");
 
     // the new block always points to its successor
     block->next = curr;
@@ -311,7 +309,7 @@ void _km_init( void ) {
 
     // set our cutoff point as the end of the BSS section
     // cutoff = (uint32_t) (&_end + 0x10000);
-    cutoff = (uint32_t) (0x3f000);
+    cutoff = (uint32_t) (0x6b000);
 
     // round it up to the next multiple of 4K (0x1000)
     if( cutoff & 0xfffLL ) {
@@ -411,9 +409,6 @@ void _km_init( void ) {
         __cio_printf("PHYS MEM: %x %x\n", b32, l32);
 
         _add_block( b32, l32 );
-        __cio_printf("END\n");
-        __delay(100);
-
     }
 
     // record the initialization
