@@ -185,20 +185,21 @@ extern int _end;    // end of the BSS section - provided by the linker
 ** @param base   Base address of the block
 ** @param length Block length, in bytes
 */
-static void _add_block( uint32_t base, uint32_t length ) {
+static void _add_block( uint32_t base, uint32_t length) {
     Blockinfo *block;
 
 
     if(!is_paging_init()){
-        if(length >= 40 * SZ_PAGE){
-            _phys_alloc_init(base, 40);
+        uint8_t num_pages=10;
+        if(length >= num_pages * SZ_PAGE){
+            _phys_alloc_init(base, length/SZ_PAGE);
             _paging_init();
-            for(int i = 0; i < 40 * SZ_PAGE; i+=SZ_PAGE){
+            for(int i = 0; i < length/SZ_PAGE * SZ_PAGE; i+=SZ_PAGE){
                 map_virt_page_to_phys(base + i, base + i);
             }
-            base += 40* SZ_PAGE;
-            length -= 40 * SZ_PAGE;
-
+            return;
+            // base += num_pages* SZ_PAGE;
+            // length -= num_pages * SZ_PAGE;
         }else{
             PANIC(0, "Not enough mem for paging - fix this.");
         }
@@ -213,20 +214,19 @@ static void _add_block( uint32_t base, uint32_t length ) {
         // round it down to 4K
         length &= 0xfffff000;
     }
+    if(!is_paging_init()){
+        PANIC(0, "Paging is not initialized :(");
+    }
 
     // create the "block"
 
     block = (Blockinfo *) base;
-    if(is_paging_init()){
-        uint32_t virt = 0+base;
-        // let's identity map this block for now
-        for(int i = 0; i < length; i+=SZ_PAGE){
-            map_virt_page_to_phys(virt + i,base + i);
-        }
-        __cio_puts("Writing block");
-        // block = base +
-        block = (Blockinfo *) virt;
-    }
+    uint32_t virt = 0+base;
+    // let's identity map this block for now
+    map_virt_page_to_phys(virt,base);
+
+    // block = base +
+    block = (Blockinfo *) virt;
 
     block->pages = B2P(length);
     block->next = NULL;
@@ -256,6 +256,7 @@ static void _add_block( uint32_t base, uint32_t length ) {
 
     while( curr && curr < block ) {
         prev = curr;
+        map_virt_page_to_phys(curr,curr);
         curr = curr->next;
     }
 
@@ -308,7 +309,7 @@ void _km_init( void ) {
 
     // set our cutoff point as the end of the BSS section
     // cutoff = (uint32_t) (&_end + 0x10000);
-    cutoff = (uint32_t) (0x3E000);
+    cutoff = (uint32_t) (0x6b000);
 
     // round it up to the next multiple of 4K (0x1000)
     if( cutoff & 0xfffLL ) {
@@ -327,7 +328,7 @@ void _km_init( void ) {
     // iterate through the entries, adding things to the freelist
 
     region = ((Region *) (MMAP_ADDRESS + 4));
-
+    int blocks = 0;
     for( int i = 0; i < entries; ++i, ++region ) {
 
         /*
@@ -406,7 +407,7 @@ void _km_init( void ) {
         uint32_t l32 = length & ADDR_LOW_HALF;
 
         __cio_printf("PHYS MEM: %x %x\n", b32, l32);
-        
+
         _add_block( b32, l32 );
     }
 
@@ -663,6 +664,11 @@ static void _carve_slices( void ) {
 
     // get a page
     page = _km_page_alloc( 1 );
+    
+    uint32_t virt = 0+page;
+    // let's identity map this block for now
+    map_virt_page_to_phys(virt,virt);
+    
 
     // allocation failure is a show-stopping problem
     assert( page );
