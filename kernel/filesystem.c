@@ -76,7 +76,7 @@ int read_bpb(f32_t *filesystem, bpb_t *bios_block){
     // If the boot record is successfully found then the Bootable partition 
     // signature should be 0xAA55 at offset 0x1FE(510). 
     if(sector0[510] != 0xAA55){
-        __cio_puts("\nError: Wrong Sector Found. Abandoning File System Set up\n");
+        __cio_puts("\nError: Wrong Sector Found. Abandoning File System set up\n");
         return -1;
     }
 
