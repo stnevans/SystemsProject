@@ -21,6 +21,8 @@ phys_addr alloc_frame(){
     }
 
     if(km_is_init()){
+        //Should never happen. Also we can actually make this work by just id mapping the page returned.
+        PANIC(0, "Not enough paging mem TODO");
         return (phys_addr) _km_page_alloc(1);
     }
     

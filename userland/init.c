@@ -82,13 +82,17 @@ int32_t init( int argc, char *argv[] ) {
     DELAY(STD);
 
     // Now, start the "ordinary" users
-    cwrites( "INIT: starting user processes\n" );
+    cwrites( "INIT: starting user processeseses\n" );
 
     // We use spawn() for these, as it invokes execp() with
     // 'User' as the priority level.
 
     // set up for users A, B, and C initially
+    swritech( 'a' );
+
 #ifdef SPAWN_A
+    swritech( 'a' );
+
     ARGS2( userA, "main1", "A", "30" );
     whom = spawn( BIN_MAIN1, argv_userA );
     if( whom < 0 ) {
