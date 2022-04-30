@@ -22,6 +22,7 @@
 #include "scheduler.h"
 #include "support.h"
 #include "paging.h"
+#include "filesystem.h"
 
 // need addresses of some user functions
 #include "users.h"
@@ -167,6 +168,11 @@ void _kinit( void ) {
     _sched_init();
     _clk_init();
     _sio_init();
+
+    __cio_puts("\nFile System set up starting.\n");
+    f32_t *new_fs = make_Filesystem();
+    __cio_puts("\nFile System set up complete.\n");
+    
 
     __cio_puts( "\nModule initialization complete.\n" );
     __cio_puts( "-------------------------------\n" );

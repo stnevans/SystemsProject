@@ -91,6 +91,7 @@ typedef struct bios_param_block{
 typedef struct FAT32_struct {
     bpb_t bios_block;
     uint32_t *FAT;
+    directory_t *dir;
     uint32_t data_begin_sector;
     uint32_t FAT_begin_sector;
     uint32_t current_cluster_pos;
@@ -117,7 +118,7 @@ typedef struct director_entry {
 } dir_entry_t;
 
 /*
-** Structure used for a directory containing multiple directory entries
+** Structure used to simulate the root directory
 **
 **
 */

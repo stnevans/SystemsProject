@@ -145,6 +145,8 @@ f32_t *make_Filesystem(){
 
     }
 
+    filesystem->dir = create_dir(filesystem, filesystem->data_begin_sector);
+
     return filesystem;
 }
 
@@ -232,6 +234,7 @@ uint32_t *dir_read(f32_t *filesystem, dir_entry_t *new_file, uint32_t cluster){
                 read_sectors_ATA_PIO(current_cluster_sector, (uint8_t *) entry_buffer, &dev);
                 // Copies it into the entry and updates the pointer
                 __memcpy(entry_ptr, entry_buffer, sizeof(entry_buffer));
+                current_cluster_sector += 32;
                 entry_ptr += 32;
             }
             // Updates the first byte
@@ -240,10 +243,10 @@ uint32_t *dir_read(f32_t *filesystem, dir_entry_t *new_file, uint32_t cluster){
         
         // Iterates through cluster chain
         uint32_t fat_offset = current_cluster * 4;
-        current_cluster_sector = ((current_cluster - 2) * filesystem->bios_block.sectors_per_cluster) + filesystem->data_begin_sector;
         uint32_t fat_sector = current_cluster_sector + (fat_offset / SECTOR_SIZE);
         uint32_t ent_offset = fat_offset % SECTOR_SIZE;
         current_cluster = *(uint32_t *)&filesystem->FAT[ent_offset];
+        current_cluster_sector = ((current_cluster - 2) * filesystem->bios_block.sectors_per_cluster) + filesystem->data_begin_sector;
         first_byte = current_cluster_sector & 0xFF;
     }
     
