@@ -125,9 +125,3 @@ int32_t read_sectors_ATA_PIO(uint32_t lba, uint8_t buffer, ata_device_t *dev){
     return size;
 }
 
-//TODO
-int32_t write_sectors_ATA_PIO(uint32_t lba, uint8_t sector_count, uint32_t *bytes){
-    
-    
-
-}

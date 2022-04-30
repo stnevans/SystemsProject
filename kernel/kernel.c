@@ -170,9 +170,9 @@ void _kinit( void ) {
     _sio_init();
 
     __cio_puts("\nFile System set up starting.\n");
-    f32_t *new_fs = make_Filesystem();
-    __cio_puts("\nFile System set up complete.\n");
-    
+    //f32_t *new_fs = make_Filesystem();
+    __cio_puts("\nFile System set up failed.\n");
+    //__cio_puts("\nFile System set up completed.\n");
 
     __cio_puts( "\nModule initialization complete.\n" );
     __cio_puts( "-------------------------------\n" );
