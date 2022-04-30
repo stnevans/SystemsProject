@@ -128,8 +128,6 @@ typedef struct FAT32_struct {
     uint32_t current_cluster_pos;
 } f32_t;
 
-
-
 /*
 ** Globals
 */
@@ -144,9 +142,9 @@ void end_Filesystem(f32_t *filesystem);
 
 dir_entry_t *create_file(char* new_name, char* type, uint8_t attribute, uint32_t size, uint32_t cluster_num);
 
-int find_dir(f32_t *filesystem, char* filename);
+int find_dir(f32_t *filesystem, char *filename);
 
-uint32_t *dir_read(f32_t *filesystem, dir_entry_t *this_file, uint32_t cluster);
+uint32_t *dir_read(f32_t *filesystem, char *filename);
 
 void file_write(f32_t *filesystem, dir_entry_t *this_file);
 

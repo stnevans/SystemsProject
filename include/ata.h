@@ -6,6 +6,8 @@
 ** author: Jacob Doll & Eric Chen
 **
 ** description: Header file for ATA driver
+** Note: Much of the implementation is pulled from Jacob's phoenixos 
+** project with his permission
 */
 
 #ifndef _ATA_H_

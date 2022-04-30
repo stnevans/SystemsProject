@@ -5,7 +5,9 @@
 **
 ** author: Eric Chen
 **
-** description:
+** description: This file sets up the FAT32 filesystem including
+** the Boot Record, FAT, and data area. Also provides support for
+** some filesystem functions.
 */
 
 #define SP_KERNEL_SRC
@@ -63,13 +65,20 @@ ata_device_t dev;
 ** @param bios_block The structure that will hold the BIOS Parameter Block
 **                   from the disk sector
 **
-** @return None
+** @return 1 if the BPB was found and read, -1 if there was an issue
 */
-void read_bpb(f32_t *filesystem, bpb_t *bios_block){
+int read_bpb(f32_t *filesystem, bpb_t *bios_block){
     __cio_puts("\nReading BIOS Parameter Block from disk...\n");
     // Finds and reads the sector where the Boot Record is from disk
     uint8_t sector0[SECTOR_SIZE];
     read_sectors_ATA_PIO(0, (uint8_t *) sector0, &dev);
+
+    // If the boot record is successfully found then the Bootable partition 
+    // signature should be 0xAA55 at offset 0x1FE(510). 
+    if(sector0[510] != 0xAA55){
+        __cio_puts("\nError: Wrong Sector Found. Abandoning File System Set up\n");
+        return -1;
+    }
 
     // BIOS Parameter Block
     __memcpy(&bios_block->bytes_per_sector, &sector0[11], sizeof(sector0[11]));
@@ -96,6 +105,8 @@ void read_bpb(f32_t *filesystem, bpb_t *bios_block){
     __memcpy(&bios_block->windows_flags, &sector0[65], sizeof(sector0[65]));
     __memcpy(&bios_block->signature, &sector0[66], sizeof(sector0[66]));
     __memcpy(&bios_block->volume_id, &sector0[67], sizeof(sector0[67]));
+
+    return 1;
 }
 
 /**
@@ -134,7 +145,9 @@ f32_t *make_Filesystem(){
     }
 
     // Get information about BPB
-    read_bpb(filesystem, &filesystem->bios_block);
+    if(read_bpb(filesystem, &filesystem->bios_block) == -1){
+        return NULL;
+    }
 
     // Finds various information about where sectors begin and how large clusters are
     filesystem->FAT_begin_sector = filesystem->bios_block.reserved_sectors;
