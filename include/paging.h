@@ -54,82 +54,277 @@ enum PAGE_PDE_FLAGS {
 };
 
 
-
-// These functions are meant to manipulate or get the basic attributes of a pte
-void pte_set_attr(pte_t* pte, uint32_t attr);
-void pte_del_attr(pte_t* pte, uint32_t attr);
-void pte_set_frame(pte_t* pte, phys_addr phys);
-phys_addr pte_get_frame(pte_t * pte);
-
-// These functions are meant to manipulate or get the basic attributes of a pde
-void pde_set_attr(pde_t* pde, uint32_t attr);
-void pde_del_attr(pde_t* pde, uint32_t attr);
-void pde_set_frame(pde_t* pde, phys_addr phys);
-phys_addr pde_get_frame(pde_t * pde);
-
-// Finds the pte for a given virtual address on a page table
-pte_t * find_pte_entry(struct page_table * pg_tbl, virt_addr addr);
-// Finds the page directory for a given virtual address on a page directory
-pde_t * find_pde_entry(struct page_directory * pd_tbl, virt_addr addr);
-
-// Functions to allocate and free page tables and page directories
+/**
+** Name:    alloc_pg_tbl
+**
+** Alloc a page table
+** @return a pointer to a page table or NULL if no memory is available
+**
+*/
 struct page_table * alloc_pg_tbl(void);
+/**
+** Name:    free_pg_tbl
+**
+** Free a page table
+**
+** @param tbl   The table to free
+*/
 void free_pg_tbl(struct page_table * tbl);
+/**
+** Name:    alloc_pg_dir
+**
+** Alloc a page directory
+** @return a pointer to a page directory or NULL if no memory is available
+**
+*/
 struct page_directory * alloc_pg_dir(void);
+/**
+** Name:    free_pg_dir
+**
+** Free a page directory
+**
+** @param tbl   The directory to free
+*/
 void free_pg_dir(struct page_directory * dir);
-
-
-// Creates a base page directory. The directory identity maps the first 600 KB and also maps it to 00000000c0000000
-struct page_directory * get_base_pg_dir(void);
-
-// Associate a given virtual address with a physical frame. Uses the current page directory
-void map_virt_page_to_phys(virt_addr virt, phys_addr phys);
-
-// Associate a given virtual address with a physical frame.
-void map_virt_page_to_phys_pg_dir(struct page_directory * pg_dir, virt_addr virt, phys_addr phys);
-
-// Get the current page directory
+/**
+** Name:    pte_set_attr
+**
+** Sets an attribute of a pte
+**
+** @param pte   A pointer to the pte
+** @param attr  The attribute to set
+*/
+void pte_set_attr(pte_t * pte, uint32_t attr);
+/**
+** Name:    pte_del_attr
+**
+** Deletes an attribute of a pte
+**
+** @param pte   A pointer to the pte
+** @param attr  The attribute to del
+*/
+void pte_del_attr(pte_t * pte, uint32_t attr);
+/**
+** Name:    pte_set_frame
+**
+** Sets the frame for a pte
+**
+** @param pte   A pointer to the pte
+** @param phys  The physical address of the frame
+*/
+void pte_set_frame(pte_t * pte, phys_addr phys);
+/**
+** Name:    pte_get_frame
+**
+** Gets the frame of a pte
+**
+** @return  The frame backing a pte
+*/
+phys_addr pte_get_frame(pte_t * pte);
+/**
+** Name:    pde_set_attr
+**
+** Sets an attribute of a pde
+**
+** @param pde   A pointer to the pde
+** @param attr  The attribute to set
+*/
+void pde_set_attr(pde_t * pde, uint32_t attr);
+/**
+** Name:    pde_del_attr
+**
+** Deletes an attribute of a pde
+**
+** @param pde   A pointer to the pde
+** @param attr  The attribute to del
+*/
+void pde_del_attr(pde_t * pde, uint32_t attr);
+/**
+** Name:    pde_set_frame
+**
+** Sets the frame for a pde
+**
+** @param pde   A pointer to the pde
+** @param phys  The physical address of the frame
+*/
+void pde_set_frame(pde_t * pde, phys_addr phys);
+/**
+** Name:    pde_get_frame
+**
+** Gets the frame of a pde
+**
+** @return  The frame backing a pde
+*/
+phys_addr pde_get_frame(pde_t * pde);
+/**
+** Name:    alloc_page
+**
+** Allocate a frame, set the pte to use the frame, mark as present 
+**
+** @param pte the pte to create a frame for
+**
+** @return false if a frame could not allocate for the pte. True otherwise 
+*/
+char alloc_page(pte_t * pte);
+/**
+** Name:    free_page
+**
+**  Free the backing frame and mark the page not present
+**
+** @param pte the pte to free the frame for
+*/
+void free_page(pte_t * pte);
+/**
+** Name:    find_pte_entry
+**
+**  Find the pte entry given a page table and address
+**
+** @param pg_tbl the page table to search
+** @param addr the virtual address
+**
+** @return The address of the pte corresponding to addr
+*/
+pte_t * find_pte_entry(struct page_table * pg_tbl, virt_addr addr);
+/**
+** Name:    find_pde_entry
+**
+**  Find the pte entry given a page table and address
+**
+** @param pg_dir the page directory to search
+** @param addr the virtual address
+**
+** @return The address of the pde corresponding to addr
+*/
+pde_t * find_pde_entry(struct page_directory * pg_dir, virt_addr addr);
+/**
+** Name:    get_current_pg_dir
+**
+**  Get the current page directory
+**
+** @return A pointer to the current pg_dir
+*/
 struct page_directory * get_current_pg_dir(void);
-
-// Delete a page directory. Frees all of the page tables that are part of the directory.
-// Notably, this does not free the frames in the page tables.
-void delete_pg_dir(struct page_directory * pg_dir);
-
-// Copy a page directory. A new page table is created for every table within the first directory.
-// This does not copy the frames in the page table. That means every piece of memory is backed by the same frame.
-// Basically like vfork()
-struct page_directory * copy_pg_dir(struct page_directory * pg_dir);
-
-// Get the page directory for the kernel. This is basically the base_pg_dir, but it also has the kernel stack.
-// This would be used if we made kthreads for example.
+/**
+** Name:    get_kernel_pg_dir
+**
+**  Get the kernel page directory
+**
+** @return A pointer to the kernel pg_dir
+*/
 struct page_directory * get_kernel_pg_dir(void);
-
-
-
-// Allocate a frame at a given virtual address. Returns true if a page was allocated.
-// Returns false if there was already a frame or if allocation failed.
-bool_t alloc_page_at(struct page_directory * pg_dir, virt_addr virt);
-
-//
-bool_t is_mapped(struct page_directory * pg_dir, virt_addr virt);
-
-
-// Unmap a given virtual address. This does not free the frame.
-void unmap_virt(struct page_directory * pg_dir, virt_addr virt);
-
-// Free a frame at a given virtual address
-void free_frame_at(struct page_directory * pg_dir, virt_addr virt);
-
-// Set the page directory to the passed one
+/**
+** Name:    set_page_directory
+**
+**  Set cr3 to use the passed page directory
+** Also enable the paging bit in cr0
+**
+** @param pg_dir the page directory to use
+*/
 void set_page_directory(struct page_directory * pg_dir);
-
-
-// Test if paging is init
-uint8_t is_paging_init(void);
-
-// Initialize the paging module
+/**
+** Name:    map_virt_page_to_phys
+**
+**  Map a virtual page to a physical frame
+**
+** @param virt the wanted virtual address
+** @param phys the backing frame address
+*/
+void map_virt_page_to_phys(virt_addr virt, phys_addr phys);
+/**
+** Name:    map_virt_page_to_phys_pg_dir
+**
+**  Map a virtual page to a physical frame
+**
+** @param pg_dir the page directory to apply the changes to
+** @param virt the wanted virtual address
+** @param phys the backing frame address
+*/
+void map_virt_page_to_phys_pg_dir(struct page_directory * pg_dir, virt_addr virt, phys_addr phys);
+/**
+** Name:    unmap_virt
+**
+**  Unmap a virtual address
+**
+** @param pg_dir the page directory to apply the changes to
+** @param virt the virtual address to unmap
+*/
+void unmap_virt(struct page_directory * pg_dir, virt_addr virt);
+/**
+** Name:    get_base_pg_dir
+**
+**  Get a basic page directory that will be used for the kernel.
+**  Identity maps the bottom 600KB.
+**  Maps the bottom 1MB to 0xc0000000
+**
+** @return a pointer to the base page directory
+*/
+struct page_directory * get_base_pg_dir(void);
+/**
+** Name:    copy_pg_dir
+**
+** Copies a page directory. Each page table uses a different frame,
+** but each pte uses the same frame.
+**
+** @param pg_dir the page directory to copy
+**
+** @return a pointer to a page directory that is a copy
+*/
+struct page_directory * copy_pg_dir(struct page_directory * pg_dir);
+/**
+** Name:    delete_pg_dir
+**
+** This just clears the page tables of a page directory.
+** Something else is repsonsible for freeing the backing frames for each pte
+**
+** @param pg_dir the page directory to delete
+*/
+void delete_pg_dir(struct page_directory * pg_dir);
+/**
+** Name:    alloc_page_at
+**
+** Allocate a new page at a given virtual address.
+**
+** @param pg_dir the page directory to use
+** @param virt the address to try to create a page at
+**
+** @return true if a page was allocated. false if a page was already there or it failed
+*/
+bool_t alloc_page_at(struct page_directory * pg_dir, virt_addr virt);
+/**
+** Name:    is_mapped
+**
+** Test if an address is already mapped
+**
+** @param pg_dir the page directory to use
+** @param virt the address to check if mapped
+**
+** @return true if an address was already mapped
+*/
+bool_t is_mapped(struct page_directory * pg_dir, virt_addr virt);
+/**
+** Name:    free_frame_at
+**
+** Free the frame at a given virtual address. 
+** Also unmaps the address
+**
+** @param pg_dir the page directory to use
+** @param virt the address to free the frame of and unmap
+*/
+void free_frame_at(struct page_directory * pg_dir, virt_addr virt);
+/**
+** Name:    _paging_init
+**
+** Initializes the paging module. Turns on paging
+*/
 void _paging_init(void);
-
+/**
+** Name:    is_paging_init
+**
+** Tests if paging is initialized
+**
+** @return true if paging has been initialized. false if not.
+*/
+uint8_t is_paging_init(void);
 #endif
 
 #endif
