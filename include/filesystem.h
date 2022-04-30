@@ -84,19 +84,6 @@ typedef struct bios_param_block{
 } bpb_t;
 
 /*
-** FAT Filesystem that contains the boot record, the file allocation table (FAT)
-** and information about the sectors, clusters, and where they begin.
-** Similar to FSInfo Structure
-*/
-typedef struct FAT32_struct {
-    bpb_t bios_block;
-    uint32_t *FAT;
-    uint32_t data_begin_sector;
-    uint32_t FAT_begin_sector;
-    uint32_t current_cluster_pos;
-} f32_t;
-
-/*
 ** Basic structure for a directory entry (files)
 **
 */
@@ -117,7 +104,7 @@ typedef struct director_entry {
 } dir_entry_t;
 
 /*
-** Structure used for a directory containing multiple directory entries
+** Structure used to simulate the root directory
 **
 **
 */
@@ -126,6 +113,20 @@ typedef struct directory {
     dir_entry_t *entries;
     uint32_t num_entries;
 } directory_t;
+
+/*
+** FAT Filesystem that contains the boot record, the file allocation table (FAT)
+** and information about the sectors, clusters, and where they begin.
+** Similar to FSInfo Structure
+*/
+typedef struct FAT32_struct {
+    bpb_t bios_block;
+    uint32_t *FAT;
+    directory_t *dir;
+    uint32_t data_begin_sector;
+    uint32_t FAT_begin_sector;
+    uint32_t current_cluster_pos;
+} f32_t;
 
 /*
 ** Globals
@@ -141,11 +142,13 @@ void end_Filesystem(f32_t *filesystem);
 
 dir_entry_t *create_file(char* new_name, char* type, uint8_t attribute, uint32_t size, uint32_t cluster_num);
 
-uint32_t *dir_read(f32_t *filesystem, dir_entry_t* this_file, uint32_t cluster);
+int find_dir(f32_t *filesystem, char *filename);
 
-void file_write(f32_t *filesystem, dir_entry_t* this_file, directory_t *this_dir);
+uint32_t *dir_read(f32_t *filesystem, char *filename);
 
-void delete_file(f32_t *filesystem, dir_entry_t* del_file, directory_t *this_dir);
+void file_write(f32_t *filesystem, dir_entry_t *this_file);
+
+void delete_file(f32_t *filesystem, dir_entry_t *del_file);
 
 directory_t *create_dir(f32_t *filesystem, uint32_t cluster);
 

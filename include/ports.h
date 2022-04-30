@@ -5,7 +5,10 @@
 **
 ** author: Jacob Doll & Eric Chen
 **
-** description:
+** description: This is the file for the ports used in the ATA driver
+** Note: Much of the implementation is pulled from Jacob's phoenixos project 
+** with his permission
+** Note 2: Most the functions are already found in lib.h
 */
 
 #ifndef _PORTS_H_
