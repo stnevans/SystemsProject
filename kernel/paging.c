@@ -283,6 +283,26 @@ bool_t alloc_page_at(struct page_directory * pg_dir, virt_addr virt){
     return true;
 }
 
+
+// Return true of the page is already mapped
+bool_t is_mapped(struct page_directory * pg_dir, virt_addr virt){
+    pde_t * pd_entry = &pg_dir->entry[PAGE_DIRECTORY_INDEX(virt)];
+    
+    // Check if pde is present already. If not, we alloc a new frame for one.
+    if((*pd_entry & I86_PDE_PRESENT) != I86_PDE_PRESENT){
+        return false;
+    }
+    // We now have a present pde. So we just need to set the relevant pte bits.
+    struct page_table * tbl = (struct page_table *) PAGE_GET_PHYSICAL_ADDRESS(pd_entry);
+    
+
+    // let's assume we have idenitiy mapping at the bottom
+    pte_t * pt_entry = &tbl->entry[PAGE_TABLE_INDEX(virt)];
+    if((*pt_entry & I86_PTE_PRESENT) != I86_PDE_PRESENT){
+        return false;
+    }
+    return true;
+}
 void free_frame_at(struct page_directory * pg_dir, virt_addr virt){
     pde_t * pd_entry = &pg_dir->entry[PAGE_DIRECTORY_INDEX(virt)];
     if(!(*pd_entry)){
