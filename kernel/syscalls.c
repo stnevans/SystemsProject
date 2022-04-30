@@ -282,7 +282,7 @@ static void _sys_execp( pcb_t *curr ) {
     __cio_printf( "--> _sys_execp, pid %d\n", curr->pid );
 #endif
 
-    uint32_t elf_entry = elf_load_program(entry);
+    uint32_t elf_entry = _elf_load_program(entry);
 
     if (!elf_entry) {
         __sprint( b256, "*** execp(): could not load binary at address: %x\n",
