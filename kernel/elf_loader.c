@@ -13,24 +13,28 @@
 #include "elf_loader.h"
 #include "paging.h"
 
-static int elf_load_segment(uint32_t addr, uint32_t offset, uint32_t vaddr, uint32_t size, uint32_t align) {
+static bool_t elf_load_segment(uint32_t addr, uint32_t offset, uint32_t vaddr, uint32_t size, uint32_t align) {
     uint32_t paddr = addr + offset;
-    uint32_t num_pages = (size / align) + 1; 
+    uint32_t num_pages = (size / align) + 1;
+    uint32_t cur_vaddr = vaddr; 
 
     if (!vaddr) return 0;
 
     while (num_pages) {
-        map_virt_page_to_phys(vaddr, paddr);
+        if (!alloc_page_at(get_current_pg_dir(), cur_vaddr)) {
+            return false;
+        }
 
-        paddr += align;
-        vaddr += addr;
+        cur_vaddr += SZ_PAGE;
         num_pages -= 1;
     }
 
-    return 1;
+    __memcpy((void*)vaddr, (void*)paddr, size);
+
+    return true;
 }
 
-static int elf_read_phdrs(uint32_t addr, uint32_t phoff, uint16_t phentsize, uint16_t phnum) {
+static bool_t elf_read_phdrs(uint32_t addr, uint32_t phoff, uint16_t phentsize, uint16_t phnum) {
     uint32_t phaddr = addr + phoff;
     Elf32_Phdr *curr;
 
@@ -45,16 +49,16 @@ static int elf_read_phdrs(uint32_t addr, uint32_t phoff, uint16_t phentsize, uin
         phnum -= 1;
     }
     
-    return 1;
+    return true;
 }
 
-static int elf_verify(Elf32_Ehdr *hdr) {
+static bool_t elf_verify(Elf32_Ehdr *hdr) {
     if (!hdr) return 0;
-    if (hdr->e_ident[EI_MAG0] != ELFMAG0) return 0;
-    if (hdr->e_ident[EI_MAG1] != ELFMAG1) return 0;
-    if (hdr->e_ident[EI_MAG2] != ELFMAG2) return 0;
-    if (hdr->e_ident[EI_MAG3] != ELFMAG3) return 0;
-    return 1;
+    if (hdr->e_ident[EI_MAG0] != ELFMAG0) return false;
+    if (hdr->e_ident[EI_MAG1] != ELFMAG1) return false;
+    if (hdr->e_ident[EI_MAG2] != ELFMAG2) return false;
+    if (hdr->e_ident[EI_MAG3] != ELFMAG3) return false;
+    return true;
 }
 
 uint32_t elf_load_program(uint32_t addr) {
