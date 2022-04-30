@@ -26,13 +26,18 @@
 static bool_t _elf_load_segment(uint32_t addr, uint32_t offset, uint32_t vaddr, uint32_t size) {
     uint32_t paddr = addr + offset;
     uint32_t num_pages = (size / SZ_PAGE) + 1;
+    if(size % 4096 + vaddr % 4096 > 4096){
+        num_pages += 1;
+    }
     uint32_t cur_vaddr = vaddr; 
 
     if (!vaddr) return true;
 
     while (num_pages) {
-        if (!alloc_page_at(get_current_pg_dir(), cur_vaddr)) {
-            return false;
+        if(!is_mapped(get_current_pg_dir(), cur_vaddr)){
+            if (!alloc_page_at(get_current_pg_dir(), cur_vaddr)) {
+                return false;
+            }
         }
 
         cur_vaddr += SZ_PAGE;

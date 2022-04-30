@@ -110,6 +110,10 @@ struct page_directory * get_kernel_pg_dir(void);
 // Returns false if there was already a frame or if allocation failed.
 bool_t alloc_page_at(struct page_directory * pg_dir, virt_addr virt);
 
+//
+bool_t is_mapped(struct page_directory * pg_dir, virt_addr virt);
+
+
 // Unmap a given virtual address. This does not free the frame.
 void unmap_virt(struct page_directory * pg_dir, virt_addr virt);
 
