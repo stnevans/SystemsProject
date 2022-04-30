@@ -3,11 +3,13 @@
 **
 ** @author CSCI-452 class of 20215
 **
-** Description: Definitions for elf loading.
+** Description: Definitions for ELF loading as defined by the Linux Kernel.
 */
 
 #ifndef ELF_H_
 #define ELF_H_
+
+#ifndef SP_ASM_SRC
 
 #include "common.h"
 
@@ -78,6 +80,17 @@ typedef struct {
 #define PT_TLS		7		/* Thread-local storage segment */
 #define	PT_NUM		8		/* Number of defined types */
 
-uint32_t elf_load_program(uint32_t address);
 
-#endif
+/**
+** _elf_load_program(address)
+**
+** Loads ELF binary stored in physical memory. Returns entry point on success.
+**
+** @param address	Location in physical memory to read from
+**
+** @return The entry point of the program or zero on failure. 
+*/
+uint32_t _elf_load_program(uint32_t address);
+
+#endif /* SP_ASM_SRC */
+#endif /* ELF_H_ */
