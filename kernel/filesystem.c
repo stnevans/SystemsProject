@@ -234,7 +234,7 @@ dir_entry_t *create_file(char* new_name, char* type, uint8_t attribute, uint32_t
 int find_dir(f32_t *filesystem, char* filename){
     int entry_count;
     for(entry_count = 0; entry_count < filesystem->dir->cluster_num; entry_count++){
-        if((__strcmp(filesystem->dir->entries[entry_count].name, filename == 0))){
+        if((__strcmp(filesystem->dir->entries[entry_count].name, filename) == 0)){
             return entry_count;
         }    
     }
