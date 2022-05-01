@@ -6,8 +6,8 @@
 ** author: Eric Chen
 **
 ** description: This file sets up the FAT32 filesystem including
-** the Boot Record, FAT, and data area. Also provides support for
-** some filesystem functions.
+** the Boot Record, FAT, and data area. Also provides some filesystem 
+** functions.
 */
 
 #define SP_KERNEL_SRC
@@ -59,13 +59,13 @@ ata_device_t dev;
 **
 ** This function uses the ATA device driver to find the sector
 ** where the BIOS Parameter Block is and loads it into
-** the filesystem.
+** the filesystem
 **
 ** @param filesystem The main FAT32 filesystem structure
 ** @param bios_block The structure that will hold the BIOS Parameter Block
 **                   from the disk sector
 **
-** @return 1 if the BPB was found and read, -1 if there was an issue
+** @return 1 if the BPB was found and read, -1 if there was an issue that stopped it
 */
 int read_bpb(f32_t *filesystem, bpb_t *bios_block){
     __cio_puts("\nReading BIOS Parameter Block from disk...\n");
@@ -144,20 +144,18 @@ f32_t *make_Filesystem(){
         __cio_puts("ATA Drive Identified: Secondary Slave\n");
     }
 
-    // Get information about BPB
+    // Get information about BPB, if it can't cancel the filesystem set up
     if(read_bpb(filesystem, &filesystem->bios_block) == -1){
         return NULL;
     }
 
-    // Finds various information about where sectors begin and how large clusters are
+    // Finds various information about where sectors begin
     filesystem->FAT_begin_sector = filesystem->bios_block.reserved_sectors;
     filesystem->data_begin_sector = filesystem->bios_block.reserved_sectors + (filesystem->bios_block.num_FAT * filesystem->bios_block.sectors_per_FAT32);
     filesystem->current_cluster_pos = 0;
 
-    // Set up the File Allocation Table
-    uint32_t FAT_size = SECTOR_SIZE * filesystem->bios_block.sectors_per_FAT32;
-    
-    // Set up sectors
+    // Sets up the File Allocation Table by setting up   
+    // sectors within the FAT using data from disk
     for(uint32_t sector_count = 0; sector_count < filesystem->bios_block.sectors_per_FAT32; sector_count++){
         uint8_t this_sector[SECTOR_SIZE];
         read_sectors_ATA_PIO(filesystem->FAT_begin_sector + sector_count, (uint8_t *) this_sector, &dev);
@@ -176,7 +174,7 @@ f32_t *make_Filesystem(){
 /**
 ** Name:  end_Filesystem
 **
-** This function ends the FAT32 filesystem and cleans it up
+** This function ends the FAT32 filesystem by clearing it of its values
 **
 ** @param filesystem The filesystem structure to be cleaned
 **
@@ -193,10 +191,11 @@ void end_Filesystem(f32_t *filesystem){
 **
 ** This function creates a new directory file
 **
-** @param new_name  the name of the file
-** @param type      the file type of the new file
-** @param attribute the given attribute for the file
-** @param size      the size of the file
+** @param new_name    The name of the file
+** @param type        The file type of the new file
+** @param attribute   The given attribute for the file
+** @param size        The size of the file
+** @param cluster_num The location of the cluster where the file will be
 **
 ** @return The new file (dir_entry_t)
 */
@@ -245,11 +244,10 @@ int find_dir(f32_t *filesystem, char* filename){
 /**
 ** Name:  dir_read
 **
-** This function finds a directory and reads it using a given cluster
+** This function finds a directory and reads it using a given file name
 **
-** @param filesystem the FAT32 filesystem
-** @param new_file   the file being looked for
-** @param cluster    the cluster number where the file is located
+** @param filesystem The FAT32 filesystem
+** @param filename   The name of the directory file being looked for
 **
 ** @return None
 */
@@ -277,8 +275,10 @@ uint32_t *dir_read(f32_t *filesystem, char *filename){
             if (first_byte != 0xE5){
                 // Read current entry
                 read_sectors_ATA_PIO(current_cluster_sector, (uint8_t *) entry_buffer, &dev);
+
                 // Copies it into the entry and updates the pointer
                 __memcpy(entry_ptr, entry_buffer, sizeof(entry_buffer));
+
                 // Goes to the next entry on the sector
                 current_cluster_sector += 32;
                 entry_ptr += 32;
@@ -291,6 +291,7 @@ uint32_t *dir_read(f32_t *filesystem, char *filename){
         uint32_t fat_offset = current_cluster * 4;
         uint32_t fat_sector = current_cluster_sector + (fat_offset / SECTOR_SIZE);
         uint32_t ent_offset = fat_offset % SECTOR_SIZE;
+        // Gets next cluster from the FAT
         current_cluster = *(uint32_t *)&filesystem->FAT[ent_offset];
         current_cluster_sector = ((current_cluster - 2) * filesystem->bios_block.sectors_per_cluster) + filesystem->data_begin_sector;
         first_byte = current_cluster_sector & 0xFF;
@@ -302,12 +303,10 @@ uint32_t *dir_read(f32_t *filesystem, char *filename){
 /**
 ** Name:  file_write
 **
-** This function adds a new file to a directory and to the FAT
+** This function adds a new file to the root directory and to the FAT
 **
-
-** @param filesystem the FAT32 filesystem
-** @param new_file   the file to be added to the filesystem
-** @param this_dir   the directory where the file will be added to
+** @param filesystem The FAT32 filesystem
+** @param new_file   The file to be added to the filesystem
 **
 ** @return None
 */
@@ -338,9 +337,8 @@ void file_write(f32_t *filesystem, dir_entry_t *new_file){
 ** This function removes a file from the filesystem and the directory
 ** it is in
 **
-** @param filesystem the FAT32 filesystem
-** @param del_file   the file to be deleted
-** @param this_dir   the directory this file is being removed from
+** @param filesystem The FAT32 filesystem
+** @param del_file   The file to be deleted
 **
 ** @return None
 */
@@ -362,10 +360,10 @@ void delete_file(f32_t *filesystem, dir_entry_t *del_file){
 /**
 ** Name:  create_dir
 **
-** This function creates a new directory
+** This function creates a new root directory
 **
-** @param filesystem the FAT32 filesystem
-** @param cluster    the cluster where the directory will be held
+** @param filesystem The FAT32 filesystem
+** @param cluster    The cluster where the directory will be held
 **
 ** @return The newly created directory (directory_t)
 */
@@ -380,17 +378,16 @@ directory_t *create_dir(f32_t *filesystem, uint32_t cluster){
 /**
 ** Name:  rm_dir
 **
-** This function clears out a directory
+** This function clears out the root directory of its entries
 **
-** @param filesystem the FAT32 filesystem
-** @param dir        the directory to be cleaned and removed
+** @param filesystem The FAT32 filesystem
 **
 ** @return None
 */
-void rm_dir(f32_t *filesystem, directory_t *dir){
-    for(int i = 0; i < dir->num_entries; i++){
-        __memclr(&dir->entries[i], sizeof(dir->entries[i]));
+void rm_dir(f32_t *filesystem){
+    for(int i = 0; i < filesystem->dir->num_entries; i++){
+        __memclr(&filesystem->dir->entries[i], sizeof(filesystem->dir->entries[i]));
     }
 
-    __memclr(dir->entries, dir->num_entries);
+    __memclr(filesystem->dir->entries, filesystem->dir->num_entries * sizeof(dir_entry_t));
 }

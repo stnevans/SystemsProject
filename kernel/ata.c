@@ -3,7 +3,7 @@
 **
 ** @author CSCI-452 class of 20215
 **
-** author: Jacob Doll & Eric Chen
+** authors: Jacob Doll & Eric Chen
 **
 ** description: This is the file that performs the functionality for the ATA driver
 ** Note: Much of the implementation is pulled from Jacob's phoenixos project 

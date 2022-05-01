@@ -1,6 +1,5 @@
 /**
-** @file
-** file:   filesystem.h
+** @file filesystem.h
 **
 ** @author CSCI-452 class of 20215
 **
@@ -59,15 +58,15 @@ typedef struct bios_param_block{
     uint16_t reserved_sectors;
     uint8_t num_FAT;
     uint16_t num_root_dir;
-    uint16_t total_sectors; //If 0 then > 65535 so use large_sector_count
+    uint16_t total_sectors;         // If 0 then > 65535 so use large_sector_count
     uint8_t media_descriptor_type;
-    uint16_t num_sectors_per_FAT; //Only used if this was FAT12/FAT16
+    uint16_t num_sectors_per_FAT;   // Only used if this was FAT12/FAT16
     uint16_t num_sectors_per_track;
     uint16_t num_heads_media;
     uint32_t num_hidden_sectors;
-    uint32_t large_sector_count; //Used if more than 65535 sectors in the volume
+    uint32_t large_sector_count;    // Used if more than 65535 sectors in the volume
 
-    //Extended Boot Record
+    // Extended Boot Record for FAT32
     uint32_t sectors_per_FAT32;
     uint16_t flags;
     uint16_t FAT_version_num;
@@ -76,11 +75,13 @@ typedef struct bios_param_block{
     uint16_t sector_num_backup;
     char reserved_0[12];
     uint8_t drive_num;
-    uint8_t windows_flags; //Only used for flags in Windows NT, reserved otherwise
+    uint8_t windows_flags;          // Only used for flags in Windows NT, reserved otherwise
     uint8_t signature;
     uint32_t volume_id;
     char volume_label[11];
     char system_id[8];
+    // Following this would be the boot code and bootable partition signature area
+    // but they are not included due to lack of need in the filesystem
 } bpb_t;
 
 /*
@@ -96,16 +97,15 @@ typedef struct director_entry {
     uint16_t creation_time;
     uint16_t creation_date;
     uint16_t access_date;
-    uint16_t first_cluster_high_bytes;
+    uint16_t first_cluster_high_bytes; // High 16 bits of entry's first cluster
     uint16_t write_time;
     uint16_t write_date;
-    uint16_t first_cluster_low_bytes;
+    uint16_t first_cluster_low_bytes;  // Low 16 bits of entry's first cluster, used to find actual first cluster
     uint32_t file_size;
 } dir_entry_t;
 
 /*
 ** Structure used to simulate the root directory
-**
 **
 */
 typedef struct directory {
@@ -115,9 +115,10 @@ typedef struct directory {
 } directory_t;
 
 /*
-** FAT Filesystem that contains the boot record, the file allocation table (FAT)
-** and information about the sectors, clusters, and where they begin.
-** Similar to FSInfo Structure
+** FAT Filesystem that contains the boot record, the file allocation table (FAT),
+** the root directory, and information about the sectors, clusters, and where they begin.
+** Has some similarities to FSInfo Structure such as containing the last free cluster number
+** position with current_cluster_pos representing the latest free cluster
 */
 typedef struct FAT32_struct {
     bpb_t bios_block;
@@ -152,7 +153,7 @@ void delete_file(f32_t *filesystem, dir_entry_t *del_file);
 
 directory_t *create_dir(f32_t *filesystem, uint32_t cluster);
 
-void rm_dir(f32_t *filesystem, directory_t *dir);
+void rm_dir(f32_t *filesystem);
 
 #endif
 /* SP_ASM_SRC */

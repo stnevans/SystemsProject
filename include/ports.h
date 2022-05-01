@@ -3,12 +3,13 @@
 ** 
 ** @author CSCI-452 class of 20215
 **
-** author: Jacob Doll & Eric Chen
+** authors: Jacob Doll & Eric Chen
 **
 ** description: This is the file for the ports used in the ATA driver
 ** Note: Much of the implementation is pulled from Jacob's phoenixos project 
 ** with his permission
-** Note 2: Most the functions are already found in lib.h
+** Note 2: Most of the functions that are here are already found in lib.h
+** the only exception is insw()
 */
 
 #ifndef _PORTS_H_
