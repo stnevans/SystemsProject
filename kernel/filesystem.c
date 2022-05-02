@@ -249,7 +249,7 @@ int find_dir(f32_t *filesystem, char* filename){
 ** @param filesystem The FAT32 filesystem
 ** @param filename   The name of the directory file being looked for
 **
-** @return None
+** @return the data from the file
 */
 uint32_t *dir_read(f32_t *filesystem, char *filename){
     // Calculates information about where the file is and the sectors for the cluster
