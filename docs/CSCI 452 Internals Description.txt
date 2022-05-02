@@ -1,0 +1,164 @@
+﻿Names: Stuart Nevans Locke, Jacob Doll, Eric Chen
+Team 3
+Internals Description
+
+
+File System:
+The files of ata.c, ata.h, and ports.h are used for setting up the ATA driver. Much of the functionality of this section comes from Jacob’s phoneixos project. The ATA port driver is used to identify sectors from the disk and read and write data from it using IO ports. The ATA driver uses standardized values to locate the controller IO ports and after detecting the hardware device it can be used to read sectors from it. The ports.h is somewhat made irrelevant by the already existing __inb(), __outb(), etc. functions however it has the insw() so it is still usable. The main point of the ATA driver section is to read and write from the disk information about the file system.
+
+
+In the kernel, filesystem.h contains four major structures that are important to the file system module: bios_param_block, directory_entry, directory, and FAT32_struct. 
+The bios_param_block (bpb_t) contains information from the disk about the boot record and this information is used by filesystem.c to calculate where sectors and areas in the FAT32 file system are. This structure is vital to the file system as information from here is necessary for navigating the disk and reading and writing sectors of the disk. It is made up of various fields of different byte sizes ranging from 1 byte (uint8_t) and 2 bytes (uint16_t) to 4 bytes (uint32_t) and custom sizes for things like volume label string and the OEM identifier. Not all fields on the BIOS Parameter Block structure are used, only the ones relevant to the functions of the file system.
+        The directory_entry (dir_entry_t) structure represents a standard 8.3 format directory entry that contains information about a file in the file system. It holds information about the file name, file size, creation time, and attributes about the file. This structure keeps track of files in the file system and is used to find the first cluster number of a file for usage in the File Allocation Table. It is usually stored after creation in the directory structure which acts as a root directory that keeps track of every file in the file system. The original design of this structure lacked information about the creation or write time and had the number of the entries first cluster as one 32 bit value. After consulting the standard 8.3 format found in Microsoft’s documentation of it, the design was refined to fit how a directory entry would look like in an actual FAT32 file system with the first cluster separated into the high 16 bits and low 16 bits, and fields for creation, access, and write times being there.
+        The directory (directory_t) structure is used to keep track of entries that enter the file system. It was originally designed as a separate structure that keeps track of files in the file system independent of the actual FAT32 file system, but it was ultimately incorporated into the system as a representation of the root directory after it was found that FAT32 doesn’t have a dedicated root directory area. The structure itself keeps a list of entries that have been added to the file system, how many entries there are, and where the root directory’s cluster would be located. Using this structure, files are found by looking through the list of entries for matching file names and then the actual directory_entry structure for the file itself is isolated for usage in other tasks
+        The FAT32_struct (f32_t) is used to represent the file system itself and contains information about the BPB, the FAT, and the root directory structure. The entire file system revolves around this structure as it contains almost all of the information about the file system, including where to access files, which files exist, and information about the sizes of areas in the disk. Almost every file system function uses this structure and in order to access the file system, the rest of the OS would need access to the FAT32_struct created when make_Filesystem() runs. This structure also has some similarities to the FSInfo Structure as it also contains some hints/easy-to-access ways of getting information about where the data area and FAT begin and what the current available cluster to use for storing entries is. The original design of this structure had the BPB, the FAT, and some additional information about values from the FAT. The root directory structure (directory_t) was added later after reviewing the root directory and the additional information about the FAT was simplified to only the relevant information.
+
+
+In the kernel, filesystem.c contains the functions that run the actual file system. 
+        The first function to be run from filesystem.c should be make_Filesystem(). This function sets up the actual file system itself and returns a file system structure that is used to run the rest of the file system. The process starts by identifying the ATA drive that will be used to send and get information from sectors of the disk. Its first job after identifying the ATA drive is setting up the BPB by getting information from sector 0 of the disk where the boot record is located. After that information is copied to the bios_param_block (bpb_t) structure, then information about where the FAT and data area sectors begin is calculated through the BPB and stored in the file system structure for later use by other functions. Then the File Allocation Table is set up by reading sectors from the disk area where the actual FAT is located and copying the data into the FAT list. This should create the list of clusters in FAT that show where clusters are available and able to store file data. The root directory structure is also created to finish off the filesystem structure.
+        The most major functions in the file system are reading and writing directory entries. The reading directory entry function (dir_read()) was intended to be used to get data from a file using only the file’s name and be used by users to get files from the file system. It begins by extracting the file information in the form of a directory entry structure from the root directory. This directory entry is mostly used to get the first cluster where the file’s data is located. Using this cluster number, the first sector of this cluster is calculated and then the first byte of this cluster is extracted from the first sector.  Then this process loops through every cluster that is a part of this cluster chain, reads every entry from every sector in every cluster using the ATA driver read sectors function, stores the data, and finally returns the data to whomever was calling the function after all the data of the file has been read. Walking through the cluster chain is done using the FAT which keeps track of every cluster similar to a linked list with FAT[cluster] == next_cluster || end_of_fat_cluster. If the end of the fat cluster value is found using the FAT with the current cluster then the cluster chain ends, otherwise the next cluster value is used to determine the next sector and entries to be read from disk. Of special note is that the first byte of every entry determines what to do with the entry. If the first byte is 0, then the entire entry has been read and the function will end. If it is denoted by 0xE5, then this current entry in the sector is unused and the process can move on to reading the next entry. 
+        The writing directory entry function is similar. It begins by finding a free entry in the root directory to put the directory entry into so that the file information to find the file later can be stored in the file system. After the directory entry is stored into the root directory, the cluster where the file is found is stored in the FAT and that FAT cluster should be set to the end of the cluster chain. 
+        Additional functions exist to clear out the filesystem structure, create new directory entries, find a directory in the root directory, create and remove the root directory, and delete files from the file system. The delete file system function in particular (delete_file()) removes a file from its place in the root directory structure and from the FAT.
+        The file system should be initialized with the rest of the other modules in the kernel using make_Filesystem() and if the file system was set up correctly the file system structure should have been sent to the other users so that they have access to the file system and can create files, read directories from the file system, write directories to the file system, and delete files. As of the current status of the file system however, only the attempt at initializing the file system occurs, while the access of the filesystem by the users is currently unavailable.
+
+
+
+
+Paging and Virtual Memory:
+
+
+This is a brief description of how the paging system works internally, what depends on what, and what changes were made to the rest of the kernel.
+Internal Structures for Paging:
+struct pg_tbl (1024 pte_t)
+struct pg_dir (1024 pde_t)
+
+
+Typedefs Used for Paging:
+pte_t:  a typedef for a page table entry. (contains frame information and various flags)
+pde_t:  a typedef for a page directory entry. (contains frame information and various flags)
+phys_addr: a valid physical address (uint32_t)
+virt_addr: a valid virtual address (uint32_t)
+
+
+Initializing Paging:
+Call_paging_init(). This creates a basic page directory (see Basic Page Directory). All addresses that were previously valid should remain valid. Before this function is called, the internal physical allocator (phys_alloc.c) must be initialized for the space for the page table/directories for the Basic Page Directory.
+
+
+Basic Page Directory:
+This will create a basic page directory that contains an identity map for the bottom 600KB (the kernel) and mirrors the bottom 1MB to 0xc0000000. This uses 3 frames.
+
+
+Globals:
+There are two main page directories that are stored globally. One is the active page directory meaning the page directory stored in cr3. The other is the kernel page directory, or the page directory that has a valid system_esp and kernel mapping but nothing else. The kernel directory would be used in cases with no associated process such as interrupt context Any functions that don’t explicitly specify a pg_dir and operate on one assume that the current pg_dir is to be used. The naming convention for that is xxxx_xxx_pg_dir() and xxxx_xxx().
+
+
+Manipulating page table/directory entry attributes:
+pde/pte_set/del_attr() are the functions to set or remove attributes of a page table/directory entry. 
+pde/pte_set/get_frame() are the functions to set or get the backing frame of a page table/directory entry.
+
+
+Mapping Pages:
+map_virt_page_to_phys(virt_addr virt, phys_addr phys) and map_virt_page_to_phys_pg_dir(struct page_directory * pg_dir, virt_addr virt, phys_addr phys) are used. They map a given virtual address to a given physical address using the previously mentioned page table/directory manipulation functions.
+
+
+Unmapping Pages:
+unmap_virt(struct page_directory * pg_dir, virt_addr virt) should be used. It removes a mapping for a given virtual address.
+
+
+Mapping + Allocating Pages:
+alloc_page_at(struct page_directory * pg_dir, virt_addr virt) allocates a page at a given virtual address. This should be used if you don’t have a physical frame you need to back the page and just want a given empty page.
+
+
+Unmapping + Deallocating Pages:
+free_frame_at(struct page_directory * pg_dir, virt_addr virt) deallocates a page at a given virtual address. It also maps it. It is used in conjunction with alloc_page_at.
+
+
+Copying a Page Directory:
+copy_pg_dir(struct page_directory * pg_dir) should be used. It copies a page directory but makes it so every page table entry points to the same page table entry as in the original directory. This is used during fork() (really for vfork()).
+
+
+Delete a Page Directory:
+delete_pg_dir(struct page_directory * pg_dir) deletes a page directory. This should be used after all the relevant page frames have been deallocated as it does not deallocate frames backing page table entries. This is used when a process exits.
+
+
+Internal Allocation:
+Internally, paging.c depends on phys_alloc.c. 
+Page tables are allocated via alloc_pg_tbl(), which depends on the physical allocator.
+Page directories are allocated via alloc_pg_dir(), which depends on the physical allocator.
+Frames are allocated via alloc_frame(), which depends on the physical allocator.
+
+
+Internal Deallocation:
+Page tables are freed via free_pg_tbl.
+Page directories are freed via free_pg_dir.
+
+
+Physical Allocator:
+The physical allocator must be given a certain amount of physical memory in order to properly allocate frames. Once the memory given to it runs out, it falls back to kmem. Therefore it must be given at least the number of frames that is the size of the base_pg_dir. Any more memory is unnecessary but is accepted (up to 8192 frames).
+
+
+Frames are allocated via alloc_frame() which simply checks in a bitmap if each frame is in use and returns the first frame not in use or falls back to kmem.
+
+
+Frames are freed via free_frame() which just sets the relevant allocation bit in the bitmap to false or falls back to kmem.
+
+
+Hooks into the rest of the kernel:
+Stacks:
+When stacks are allocated, each stack has the address 0xdf000000 added to it. It is then mapped into memory.
+
+
+Fork:
+When processes are forked, copy_pg_dir is used.
+
+
+Dispatch:
+When a process is dispatched, set_page_directory is used to set cr3 properly and swap to the correct page directory.
+
+
+Pcb_cleanup:
+The page directory is deleted when a pcb is cleared.
+
+
+Kmem _add_block:
+The first block is given to the physical allocator as frames to use. In addition, memory for each blockchain is identity mapped (this is not the whole memory block). 
+
+
+Carve Slices:
+Any pages used for slices are mapped.
+
+
+ELF Loader:
+#####################################
+Structures:
+Elf32_Ehdr: structure of the ELF file header
+Elf32_Phdr: structure of program header entries within ELF binary
+
+
+Typedefs:
+typedef uint16_t Elf32_Half;    // Unsigned half int
+typedef uint32_t Elf32_Off;    // Unsigned offset
+typedef uint32_t Elf32_Addr;    // Unsigned address
+typedef uint32_t Elf32_Word;    // Unsigned int
+typedef int32_t  Elf32_Sword;    // Signed int
+
+
+Exported Functions:
+_elf_load_program(address): loads ELF executable into memory and returns the entry address to jump to.
+
+
+Usage:
+This module should not be called directly, instead calls to execp will use this module. However, access is granted to user applications if they want to manually load ELF binaries into memory. As long as the physical location of the binary is known in memory, this location can be passed into _elf_load_program or execp to run and load the executable.
+
+
+Internals:
+The function _elf_load_program does two things:
+1. Verifies that a valid binary is at the location supplied by making a call to _elf_verify
+2. Parses program header to load segments into memory
+Finally it returns the entry address of the program.
+
+
+Each program header defines sections of the binary and where they should be mapped in memory. The offset into the binary, virtual address, and size of each segment must be found from the program header entries. _elf_load_segment takes these as arguments and determines how many pages of memory need to be allocated and where in the virtual address space. After each page is allocated a __memcpy is made from the physical memory to the newly created virtual address space. 
+
+
+After all segments are loaded the program can be run.

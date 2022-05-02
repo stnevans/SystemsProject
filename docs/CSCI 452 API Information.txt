@@ -1,0 +1,27 @@
+﻿Names: Stuart Nevans Locke, Jacob Doll, Eric Chen
+Team 3
+API Information
+NAME
+      execp - executes a program
+
+
+SYNOPSIS
+      #include <ulib.h>
+     
+      void execp( uint32_t phys_addr, prio_t prio, char *args[] );
+      void exec( uint32_t phys_addr, char *args[] );
+DESCRIPTION
+      execp() executes a program given the physical address of a binary in physical memory, a priority number, and arguments. If the physical address supplied does not contain a valid ELF binary this function will return. args should contain a null terminated vector of string arguments to pass into the program.
+________________
+
+
+NAME
+      spawn - executes a program
+
+
+SYNOPSIS
+      #include <ulib.h>
+     
+      pid_t spawn( uint32_t phys_addr, char *args[] );
+DESCRIPTION
+      spawn() will perform both a fork() and call execp() to create and run a program in one function. The address supplied should be a physical memory address of a valid ELF binary. spawn() will return either the PID of the new process or an error code if failed.
